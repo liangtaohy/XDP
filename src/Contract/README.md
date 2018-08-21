@@ -1,2 +1,4 @@
-# XDP
-It's a small framework using psr4 for autoloading.
+# XDP Contract
+```$xslt
+主要用于框架interface实现
+```

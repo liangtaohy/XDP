@@ -9,7 +9,8 @@
     "require": {},
     "autoload": {
         "psr-4" :{
-            "Xdp\\": "src/"
+            "Xdp\\": "src/",
+            "XdpTest\\": "tests/"
         }
     },
     "require-dev": {
