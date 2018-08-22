@@ -136,7 +136,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      * @param string $key
      * @return bool
      */
-    public function remove(string $key)
+    public function remove(string $key):bool
     {
         return $this->storage->remove($key);
     }
@@ -158,19 +158,15 @@ class Container extends ContainerArrayAccess implements ContainerInterface
             throw new ContainerException($e->getMessage());
         }
 
-        // get the constructor method of the current class
         $constructor = $reflectionClass->getConstructor();
 
-        // if there is no constructor, just return new instance
         if ($constructor === null) {
             $this->resetStack();
             return new $class;
         }
 
-        // get constructor params
         $params = $constructor->getParameters();
 
-        // If there is a constructor, but no params
         if (\count($params) === 0) {
             $this->resetStack();
             return new $class;
@@ -180,7 +176,6 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         $resolutions = end($this->stack);
         $this->resetStack();
 
-        // return the resolved class
         return $reflectionClass->newInstanceArgs($resolutions);
     }
 
