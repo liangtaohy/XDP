@@ -314,6 +314,52 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
     }
 
     /**
+     * 替换input数据
+     *
+     * @param  array  $input
+     * @return \Xdp\Http\Request
+     */
+    public function replace(array $input)
+    {
+        $this->getInputSource()->replace($input);
+
+        return $this;
+    }
+
+    /**
+     * 获取请求的payload并转为json对象
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed|null|ParameterBag
+     */
+    public function json($key = null, $default = null)
+    {
+        if (! isset($this->json)) {
+            $this->json = new ParameterBag((array) json_decode($this->getContent(), true));
+        }
+
+        if (is_null($key)) {
+            return $this->json;
+        }
+
+        return data_get($this->json->all(), $key, $default);
+    }
+
+    /**
+     * 设置json payload
+     *
+     * @param  \Symfony\Component\HttpFoundation\ParameterBag  $json
+     * @return $this
+     */
+    public function setJson($json)
+    {
+        $this->json = $json;
+
+        return $this;
+    }
+
+    /**
      * 获取所有的请求数据
      *
      * @return array
@@ -393,6 +439,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
             return data_get($this->all(), $key);
         }
 
-        return $this->route($key);
+        return null;
+        //return $this->route($key);
     }
 }

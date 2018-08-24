@@ -375,4 +375,218 @@ class RequestTest extends TestCase
         $all = $request->header(null);
         $this->assertEquals('foo', $all['do-this'][0]);
     }
+
+    public function testJSONMethod()
+    {
+        $payload = ['name' => 'lotushy'];
+        $request = Request::create('/', 'GET', [], [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($payload));
+        $this->assertEquals('lotushy', $request->json('name'));
+        $this->assertEquals('lotushy', $request->input('name'));
+        $this->assertEquals('lotushy', $request['name']);
+        $data = $request->json()->all();
+        $this->assertEquals($payload, $data);
+        $this->assertTrue($request->isJson());
+    }
+
+    public function testPrefers()
+    {
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json'])->prefers(['json']));
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json'])->prefers(['html', 'json']));
+        $this->assertEquals('application/foo+json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/foo+json'])->prefers('application/foo+json'));
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/foo+json'])->prefers('json'));
+        $this->assertEquals('html', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json;q=0.5, text/html;q=1.0'])->prefers(['json', 'html']));
+        $this->assertEquals('txt', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json;q=0.5, text/plain;q=1.0, text/html;q=1.0'])->prefers(['json', 'txt', 'html']));
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/*'])->prefers('json'));
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json; charset=utf-8'])->prefers('json'));
+        $this->assertNull(Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/xml; charset=utf-8'])->prefers(['html', 'json']));
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json, text/html'])->prefers(['html', 'json']));
+        $this->assertEquals('html', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json;q=0.4, text/html;q=0.6'])->prefers(['html', 'json']));
+
+        $this->assertEquals('application/json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json; charset=utf-8'])->prefers('application/json'));
+        $this->assertEquals('application/json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json, text/html'])->prefers(['text/html', 'application/json']));
+        $this->assertEquals('text/html', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json;q=0.4, text/html;q=0.6'])->prefers(['text/html', 'application/json']));
+        $this->assertEquals('text/html', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json;q=0.4, text/html;q=0.6'])->prefers(['application/json', 'text/html']));
+
+        $this->assertEquals('json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*; charset=utf-8'])->prefers('json'));
+        $this->assertEquals('application/json', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/*'])->prefers('application/json'));
+        $this->assertEquals('application/xml', Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/*'])->prefers('application/xml'));
+        $this->assertNull(Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/*'])->prefers('text/html'));
+    }
+
+    public function testAllInputReturnsInputAfterReplace()
+    {
+        $request = Request::create('/?boom=breeze', 'GET', ['foo' => ['bar' => 'baz']]);
+        $request->replace(['foo' => ['bar' => 'baz'], 'boom' => 'breeze']);
+        $this->assertEquals(['foo' => ['bar' => 'baz'], 'boom' => 'breeze'], $request->all());
+        //echo PHP_EOL . urldecode($request->fullUrl()) . PHP_EOL;
+        $this->assertEquals('http://localhost/?boom=breeze&foo[bar]=baz', urldecode($request->fullUrl()));
+    }
+
+    public function testExpectsJson()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $this->assertTrue($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*']);
+        $this->assertFalse($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+        $this->assertTrue($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => null, 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+        $this->assertTrue($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_X_PJAX' => 'true']);
+        $this->assertFalse($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html']);
+        $this->assertFalse($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+        $this->assertFalse($request->expectsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_X_PJAX' => 'true']);
+        $this->assertFalse($request->expectsJson());
+    }
+
+    public function testFormatReturnsAcceptableFormat()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $this->assertEquals('json', $request->format());
+        $this->assertTrue($request->wantsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json; charset=utf-8']);
+        $this->assertEquals('json', $request->format());
+        $this->assertTrue($request->wantsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/atom+xml']);
+        $this->assertEquals('atom', $request->format());
+        $this->assertFalse($request->wantsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'is/not/known']);
+        $this->assertEquals('html', $request->format());
+        $this->assertEquals('foo', $request->format('foo'));
+    }
+
+    public function testFormatReturnsAcceptsJson()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $this->assertEquals('json', $request->format());
+        $this->assertTrue($request->accepts('application/json'));
+        $this->assertTrue($request->accepts('application/baz+json'));
+        $this->assertTrue($request->acceptsJson());
+        $this->assertFalse($request->acceptsHtml());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/foo+json']);
+        $this->assertTrue($request->accepts('application/foo+json'));
+        $this->assertFalse($request->accepts('application/bar+json'));
+        $this->assertFalse($request->accepts('application/json'));
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/*']);
+        $this->assertTrue($request->accepts('application/xml'));
+        $this->assertTrue($request->accepts('application/json'));
+    }
+
+    public function testFormatReturnsAcceptsHtml()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html']);
+        $this->assertEquals('html', $request->format());
+        $this->assertTrue($request->accepts('text/html'));
+        $this->assertTrue($request->acceptsHtml());
+        $this->assertFalse($request->acceptsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/*']);
+        $this->assertTrue($request->accepts('text/html'));
+        $this->assertTrue($request->accepts('text/plain'));
+    }
+
+    public function testFormatReturnsAcceptsAll()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*']);
+        $this->assertEquals('html', $request->format());
+        $this->assertTrue($request->accepts('text/html'));
+        $this->assertTrue($request->accepts('foo/bar'));
+        $this->assertTrue($request->accepts('application/baz+xml'));
+        $this->assertTrue($request->acceptsHtml());
+        $this->assertTrue($request->acceptsJson());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*']);
+        $this->assertEquals('html', $request->format());
+        $this->assertTrue($request->accepts('text/html'));
+        $this->assertTrue($request->accepts('foo/bar'));
+        $this->assertTrue($request->accepts('application/baz+xml'));
+        $this->assertTrue($request->acceptsHtml());
+        $this->assertTrue($request->acceptsJson());
+    }
+
+    public function testFormatReturnsAcceptsMultiple()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json,text/*']);
+        $this->assertTrue($request->accepts(['text/html', 'application/json']));
+        $this->assertTrue($request->accepts('text/html'));
+        $this->assertTrue($request->accepts('text/foo'));
+        $this->assertTrue($request->accepts('application/json'));
+        $this->assertTrue($request->accepts('application/baz+json'));
+    }
+
+    public function testFormatReturnsAcceptsCharset()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json; charset=utf-8']);
+        $this->assertTrue($request->accepts(['text/html', 'application/json']));
+        $this->assertFalse($request->accepts('text/html'));
+        $this->assertFalse($request->accepts('text/foo'));
+        $this->assertTrue($request->accepts('application/json'));
+        $this->assertTrue($request->accepts('application/baz+json'));
+    }
+
+    public function testBadAcceptHeader()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'Mozilla/5.0 (Windows; U; Windows NT 5.1; pt-PT; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)']);
+        $this->assertFalse($request->accepts(['text/html', 'application/json']));
+        $this->assertFalse($request->accepts('text/html'));
+        $this->assertFalse($request->accepts('text/foo'));
+        $this->assertFalse($request->accepts('application/json'));
+        $this->assertFalse($request->accepts('application/baz+json'));
+        $this->assertFalse($request->acceptsHtml());
+        $this->assertFalse($request->acceptsJson());
+
+        // Should not be handled as regex.
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '.+/.+']);
+        $this->assertFalse($request->accepts('application/json'));
+        $this->assertFalse($request->accepts('application/baz+json'));
+
+        // Should not produce compilation error on invalid regex.
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '(/(']);
+        $this->assertFalse($request->accepts('text/html'));
+    }
+
+    public function testMagicMethods()
+    {
+        // Simulates QueryStrings.
+        $request = Request::create('/', 'GET', ['foo' => 'bar', 'empty' => '']);
+
+        // Parameter 'foo' is 'bar', then it ISSET and is NOT EMPTY.
+        $this->assertEquals($request->foo, 'bar');
+        $this->assertEquals(isset($request->foo), true);
+        $this->assertEquals(empty($request->foo), false);
+
+        // Parameter 'empty' is '', then it ISSET and is EMPTY.
+        $this->assertEquals($request->empty, '');
+        $this->assertTrue(isset($request->empty));
+        $this->assertEmpty($request->empty);
+
+        // Parameter 'undefined' is undefined/null, then it NOT ISSET and is EMPTY.
+        $this->assertEquals($request->undefined, null);
+        $this->assertEquals(isset($request->undefined), false);
+        $this->assertEquals(empty($request->undefined), true);
+
+        // Special case: simulates empty QueryString and Routes, without the Route Resolver.
+        // It'll happen when you try to get a parameter outside a route.
+        $request = Request::create('/', 'GET');
+
+        // Parameter 'undefined' is undefined/null, then it NOT ISSET and is EMPTY.
+        $this->assertEquals($request->undefined, null);
+        $this->assertEquals(isset($request->undefined), false);
+        $this->assertEquals(empty($request->undefined), true);
+    }
 }
