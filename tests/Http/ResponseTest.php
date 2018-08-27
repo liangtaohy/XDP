@@ -76,6 +76,7 @@ class ResponseTest extends TestCase
         $this->assertCount(2, $cookies);
         $this->assertEquals('testsid', $cookies[1]->getValue());
         $this->assertEquals(strtotime('2019-08-23T03:55:55.000Z'), $cookies[1]->getExpiresTime());
+        echo PHP_EOL . $response . PHP_EOL;
     }
 
     public function testGetOriginalContent()
