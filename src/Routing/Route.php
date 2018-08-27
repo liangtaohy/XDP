@@ -9,12 +9,32 @@
 namespace Xdp\Routing;
 
 use Closure;
+use Xdp\Http\Request;
+use Xdp\Routing\Matching\MethodValidator;
+use Xdp\Routing\Matching\SchemeValidator;
+use Xdp\Routing\Matching\UrlValidator;
 use Xdp\Utils\Arr;
 use Xdp\Utils\Str;
 use Symfony\Component\Routing\Route as SymfonyRoute;
 
 class Route
 {
+    use RouteDependenciesTrait;
+
+    /**
+     * route所属router
+     *
+     * @var \Xdp\Routing\Router
+     */
+    public $router;
+
+    /**
+     * route所属容器
+     *
+     * @var \Xdp\Container\Container
+     */
+    public $container;
+
     /**
      * 路由响应的Uri pattern
      *
@@ -41,7 +61,7 @@ class Route
     /**
      * controller实例
      *
-     * @var
+     * @var \Xdp\Contract\Routing\Controller
      */
     public $controller;
 
@@ -53,13 +73,6 @@ class Route
     public $parameters;
 
     /**
-     * 容器实例
-     *
-     * @var
-     */
-    public $container;
-
-    /**
      * compiled route
      *
      * @var
@@ -67,18 +80,57 @@ class Route
     public $compiled;
 
     /**
+     * 中间件集合
+     *
+     * @var array
+     */
+    protected $computedMiddlewares;
+
+    protected $wheres = [];
+
+    protected $defaults = [];
+
+    /**
      * Route constructor.
      *
-     * @param $methods
-     * @param $uri
-     * @param $action
+     * @param string|array $methods
+     * @param string $uri
+     * @param array|string|\Closure$action
      */
-    public function __construct($methods, $uri, array $action = [])
+    public function __construct($methods, $uri, $action = null)
     {
         $this->uri = $uri;
         $this->methods = (array) $methods;
 
-        $this->action = $this->parseAction($action);
+        if (in_array('GET', $this->methods) && ! in_array('HEAD', $this->methods)) {
+            $this->methods[] = 'HEAD';
+        }
+
+        $this->action = $this->parseAction($uri, $action);
+    }
+
+    /**
+     * 设置container
+     *
+     * @param $container
+     * @return $this
+     */
+    public function setContainer($container)
+    {
+        $this->container = $container;
+        return $this;
+    }
+
+    /**
+     * 设置router
+     *
+     * @param $router
+     * @return $this
+     */
+    public function setRouter($router)
+    {
+        $this->router = $router;
+        return $this;
     }
 
     /**
@@ -101,6 +153,50 @@ class Route
     {
         $this->uri = $uri;
 
+        return $this;
+    }
+
+    /**
+     * 返回route以及controller上的所有middleware
+     *
+     * @return array
+     */
+    public function gatherMiddleware()
+    {
+        if (! is_null($this->computedMiddlewares)) {
+            return $this->computedMiddlewares;
+        }
+
+        $this->computedMiddlewares = [];
+        return $this->computedMiddlewares = array_unique(array_merge($this->middleware(), $this->controllerMiddleware()));
+    }
+
+    public function controllerMiddleware()
+    {
+        if (! $this->isControllerAction()) {
+            return [];
+        }
+
+        return $this->controllerDispatcher()->getMiddleware($this->getController(), $this->getControllerMethod());
+    }
+
+    /**
+     * 获取middleware或设置middleware
+     *
+     * @param array|string $middleware
+     * @return $this|array
+     */
+    public function middleware($middleware = null)
+    {
+        if (is_null($middleware)) {
+            return (array)($this->action['middleware'] ?? []);
+        }
+
+        if (is_string($middleware)) {
+            $middleware = func_get_args();
+        }
+
+        $this->action['middleware'] = array_merge((array)($this->action['middleware'] ?? []), $middleware);
         return $this;
     }
 
@@ -170,7 +266,42 @@ class Route
         return in_array('https', $this->action, true);
     }
 
-    public function runController()
+    /**
+     * request是否与该route匹配
+     *
+     * @param Request $request
+     * @param bool $includeMethodValidator
+     * @return bool
+     */
+    public function matches(Request $request, $includeMethodValidator = true)
+    {
+        $this->compiledRoute();
+
+        $validators = [
+            new UrlValidator,
+            new MethodValidator,
+            new SchemeValidator
+        ];
+
+        foreach ($validators as $validator) {
+            if (!$includeMethodValidator && $validator instanceof MethodValidator) {
+                continue;
+            }
+
+            if (!$validator->matches($this, $request)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 执行route action，并返回response
+     *
+     * @return mixed
+     */
+    public function run()
     {
         if ($this->isControllerAction()) {
             $callback = $this->parseControllerCallback();
@@ -184,11 +315,145 @@ class Route
     }
 
     /**
+     * Dispatcher
+     *
+     * @return ControllerDispatcher
+     */
+    public function controllerDispatcher()
+    {
+        return new ControllerDispatcher();
+    }
+
+    /**
+     * 执行route action，并返回response
+     *
+     * @return mixed
+     */
+    public function runCallable()
+    {
+        $callable = $this->action['uses'];
+
+        return $callable(...array_values($this->resolveMethodDependencies($this->parametersWithoutNulls(), new \ReflectionFunction($callable))));
+    }
+
+    /**
+     * 移除参数中的空值
+     *
+     * @return array
+     */
+    public function parametersWithoutNulls()
+    {
+        return array_filter($this->parameters(), function ($p) {
+            return ! is_null($p);
+        });
+    }
+
+    /**
+     * 尝试获取route的参数，如果未设置，则抛出LogicException
+     *
+     * @return array|\LogicException
+     */
+    public function parameters()
+    {
+        if (isset($this->parameters)) {
+            return $this->parameters;
+        }
+
+        throw new \LogicException('Route is not bound.');
+    }
+
+    public function hasParameters()
+    {
+        return isset($this->parameters) && !empty($this->parameters);
+    }
+
+    /**
+     * 判断$name参数是否存在
+     *
+     * @param $name
+     * @return bool
+     */
+    public function hasParameter($name)
+    {
+        if ($this->hasParameters()) {
+            return array_key_exists($name, $this->parameters());
+        }
+        return false;
+    }
+
+    public function parameter($name, $default = null)
+    {
+        return Arr::get($this->parameters(), $name, $default);
+    }
+
+    /**
+     * 给指定的参数$name设置默认值
+     *
+     * @param $name
+     * @param $value
+     * @return $this
+     */
+    public function defaults($name, $value)
+    {
+        $this->defaults[$name] = $value;
+        return $this;
+    }
+
+    /**
+     * 绑定request到路由
+     *
+     * @param $request
+     * @return $this
+     */
+    public function bind($request)
+    {
+        $this->compile();
+        $this->parameters = $this->buildPathParameters($request);
+        return $this;
+    }
+
+    /**
+     * 构建path参数
+     *
+     * @example uri := /{foo}/{bar}, request url <= /lotus/beer, 则构建的参数为：['foo' => 'lotus', 'bar' => 'beer']
+     * @param $request
+     * @return array
+     */
+    protected function buildPathParameters($request)
+    {
+        if (empty($paramNames = $this->parameterNames())) {
+            return [];
+        }
+
+        preg_match($this->compiledRoute()->getRegex(), $request->decodedPath(), $matches);
+
+        $parameters = array_intersect_key(array_slice($matches, 1), array_flip($paramNames));
+        return array_filter($parameters, function($v) {
+            return is_string($v) && strlen($v) > 0;
+        });
+    }
+
+    /**
+     * 从route uri中获取parameter names
+     *
+     * @example http://example.com/{foo}/{bar?}?name=lotus : ['foo', 'bar']
+     * @example http://example.com/foo/bar?name=lotus : []
+     *
+     * @return array
+     */
+    public function parameterNames()
+    {
+        preg_match_all("/\{(.*?)\}/", $this->getDomain() . $this->uri, $match);
+
+        return array_map(function ($m) { return trim($m, '?'); }, $match[1]);
+    }
+
+    /**
      * Compile the route into a Symfony CompiledRoute instance.
      *
-     * @return SymfonyRoute
+     * @return \Symfony\Component\Routing\CompiledRoute
      */
-    protected function compileRoute()
+    public function compiledRoute()
     {
         if (! $this->compiled) {
             $this->compiled = $this->compile();
@@ -200,7 +465,7 @@ class Route
     /**
      * compile route
      *
-     * @return SymfonyRoute
+     * @return \Symfony\Component\Routing\CompiledRoute
      */
     public function compile()
     {
@@ -215,7 +480,7 @@ class Route
 
     protected function getOptionalParameters()
     {
-        preg_match_all('/\{(\w+?)\?\}/', $this->route->uri(), $matches);
+        preg_match_all('/\{(\w+?)\?\}/', $this->uri(), $matches);
 
         return isset($matches[1]) ? array_fill_keys($matches[1], null) : [];
     }
@@ -230,8 +495,12 @@ class Route
      * @param $action
      * @return array
      */
-    protected function parseAction($action)
+    protected function parseAction($uri, $action)
     {
+        if (is_null($action)) {
+            return self::missingAction($uri);
+        }
+
         if (is_callable($action)) {
             return ['uses' => $action];
         } else if (!isset($action['uses'])) {
@@ -245,6 +514,17 @@ class Route
         return $action;
     }
 
+    protected static function missingAction($uri)
+    {
+        return ['uses' => function () use ($uri) {
+            throw new LogicException("Route for [{$uri}] has no action.");
+        }];
+    }
+
+    /**
+     * @param $action
+     * @return mixed
+     */
     protected static function findCallable($action)
     {
         return Arr::first($action, function($value, $key) {
@@ -252,6 +532,10 @@ class Route
         });
     }
 
+    /**
+     * @param $action
+     * @return string
+     */
     protected static function makeInvokable($action)
     {
         if (! method_exists($action, '__invoke')) {
@@ -261,11 +545,20 @@ class Route
         return $action.'@__invoke';
     }
 
+    /**
+     * 判断是否为controller action
+     * @return bool
+     */
     protected function isControllerAction()
     {
         return is_string($this->action['uses']);
     }
 
+    /**
+     * 解析controller action
+     *
+     * @return array
+     */
     protected function parseControllerCallback()
     {
         return Str::parseCallback($this->action['uses']);

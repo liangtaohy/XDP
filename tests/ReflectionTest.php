@@ -69,3 +69,68 @@ foreach($method->getParameters() as $key => $parameter) {
         echo $parameter->getDefaultValueConstantName() . PHP_EOL;
     }
 }
+
+$a = 1;
+$b = 3;
+
+$c = function ($a, $b, string $x = "hello") {
+    return $a + $b;
+};
+
+$method = new ReflectionFunction($c);
+
+var_dump($method->getParameters());
+
+$parameters = [];
+
+echo PHP_EOL;
+
+foreach ($method->getParameters() as $key => $parameter) {
+    echo "class: " . $parameter->getClass()->name . PHP_EOL;
+    $parameters[$parameter->name] = ${$parameter->name};
+    if (is_null($parameters[$parameter->name])) {
+        if ($parameter->isDefaultValueAvailable()) {
+            $parameters[$parameter->name] = $parameter->getDefaultValue();
+        }
+    }
+}
+
+var_dump($parameters);
+
+$result = $c(...array_values($parameters));
+echo "result of function c is " . $result . PHP_EOL;
+$result = call_user_func_array($c, $parameters);
+echo "result of function c is " . $result . PHP_EOL;
+
+
+$url = "http://example.com/{foo}/{bar}?name=lotus";
+
+preg_match_all("/\{(.*?)\}/", $url, $match);
+var_dump($match);
+
+$url = "http://example.com/{foo}/{bar?}?name=lotus";
+
+preg_match_all("/\{(.*?)\}/", $url, $match);
+var_dump($match);
+var_dump(array_flip($match[1]));
+
+$match = array_map(function ($m) { return trim($m, '?'); }, $match[1]);
+var_dump($match);
+
+$url = "http://example.com/foo/bar?name=lotus";
+
+unset($match);
+$int = preg_match_all("/\{(.*?)\}/", $url, $matches);
+$match = array_map(function ($m) { return trim($m, '?'); }, $matches[1]);
+var_dump($match);
+
+$a = ['1', 'a'=>2, 10];
+var_dump(array_slice($a, 1));
+
+function test(array $methods)
+{
+    var_dump($methods);
+}
+
+test(['head', 'get']);
+test('put');

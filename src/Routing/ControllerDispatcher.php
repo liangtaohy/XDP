@@ -38,6 +38,10 @@ class ControllerDispatcher implements \Xdp\Contract\Routing\ControllerDispatcher
      */
     public function getMiddleware($controller, $method)
     {
+        if (! method_exists($controller, 'getMiddleware')) {
+            return [];
+        }
 
+        return $controller->getMiddleware();
     }
 }
