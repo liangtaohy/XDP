@@ -68,6 +68,7 @@ class ObjectStorage
     }
 
     /**
+     * 注入一个已实例化的类
      * @param string $key
      * @param $object
      */

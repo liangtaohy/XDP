@@ -69,12 +69,11 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         if (! \is_string($key) || empty($key)) {
             throw new ContainerException('$key must be a string');
         }
-
         if ($this->storage->hasStored($key)) {
             return $this->storage->getStored($key);
         }
 
-        // key exists but hasn't been initialized yet
+        // $key存在 但是没有被初始化
         if ($this->storage->hasObject($key)) {
             $this->storage->store($key, $this->storage->getDefinition($key)($this));
             return $this->storage->getStored($key);
@@ -84,7 +83,6 @@ class Container extends ContainerArrayAccess implements ContainerInterface
             $definition = $this->storage->getFactory($key);
             return $definition($this);
         }
-
         // the key was not found
         throw new NotFoundException("The key [$key] could not be found");
     }

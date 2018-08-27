@@ -26,7 +26,7 @@ class TestContainer extends TestCase
         $this->assertEquals($test_case, new testCaseOne());
     }
 
-    public function testContainerObj()
+    /*public function testContainerObj()
     {
         $con = new Container();
         $con->add('XdpTest\Container\testCaseOne', function () {return new testCaseOne();});
@@ -69,7 +69,7 @@ class TestContainer extends TestCase
         $con->addSingleton('\XdpTest\Container\testCaseOne',function (){ return new \XdpTest\Container\testCaseOne();});
         $one = $con->get('\XdpTest\Container\testCaseOne');
         $this->assertEquals($one, new testCaseOne());
-    }
+    }*/
 }
 
 class testCaseOne

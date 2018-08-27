@@ -6,14 +6,13 @@
             "email": "13341007105@163.com"
         }
     ],
-    "require": {},
+    "require": {
+        "phpunit/phpunit": "^6.5"
+    },
     "autoload": {
         "psr-4" :{
             "Xdp\\": "src/",
             "XdpTest\\": "tests/"
         }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^6.5"
     }
 }

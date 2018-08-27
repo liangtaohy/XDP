@@ -12,85 +12,87 @@ require_once __DIR__ . "/../../vendor/autoload.php";
 
 
 use PHPUnit\Framework\TestCase;
-use Xdp\Pipeline\FingersCrossedProcessor;
+use Xdp\Container\Container;
+use Xdp\Contract\Pipeline\MiddlewareInterface;
 use Xdp\Pipeline\Pipeline;
-use Xdp\Pipeline\SuspendProcessor;
+use Closure;
 
 class TestPipe extends TestCase
 {
 
     public function testSomething()
     {
-        $ret = (new Pipeline())
-            ->pipe(new PipelineTestPipeOne())
-            ->pipe(new PipelineTestPipeTwo())
-            ->process(['name'=>'zhangsan','pwd'=>'lisi']);
-        $this->assertEquals([ 'pwd' => 'lisi'], $ret);
+        $app = new Container();
+        $data = (new Pipeline($app))
+            ->send(1)
+            ->through([PipelineTestPipeOne::class, 'XdpTest\Pipeline\PipelineTestPipeTwo:a,b,c'])
+            ->then(function ($paied) {
+                return $paied;
+            });
+        $this->assertEquals($data, 5);
     }
 
-    public function testFingersCrossedProcessor()
+    public function testViaHandle()
     {
-        $ret =(new FingersCrossedProcessor())
-            ->process(
-                ['name'=>'shiwenyuan','pwd'=>'1231312'],
-                new PipelineTestPipeTwo(),
-                new PipelineTestPipeOne()
-            );
-        $this->assertEquals([ 'pwd' => '1231312'], $ret);
+        $app = new Container();
+        $data = (new Pipeline($app))
+            ->via('invoke')
+            ->send(1)
+            ->through([PipelineTestPipeOne::class, 'XdpTest\Pipeline\PipelineTestPipeTwo:a,b,c'])
+            ->then(function ($paied) {
+                return $paied;
+            });
+        $this->assertEquals($data, 3);
     }
 
-    public function testSuspendProcessor()
+    public function testSuspend()
     {
-        $ret =(new SuspendProcessor(function ($payload) {
-               return 2 < count($payload) ? true : false;
-        }))
-            ->process(
-                [1,2,3,4,5,5,6,7,8],
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree(),
-                new PipelineTestPipeThree()
-            );
-        $this->assertEquals([21], $ret);
+        $app = new Container();
+        $data = (new Pipeline($app))
+            ->send(2)
+            ->through([
+                PipelineTestPipeOne::class,
+                function ($request, \Closure $next) {
+                    return $request;
+                },
+                PipelineTestPipeTwo::class,
+            ])
+            ->then(function ($paied) {
+                return $paied;
+            });
+        $this->assertEquals($data, 3);
     }
 }
 
 
-class PipelineTestPipeOne
+class PipelineTestPipeOne implements MiddlewareInterface
 {
-    public function __invoke($payload)
+    public function handle($request, \Closure $next)
     {
-        unset($payload['name']);
-        return $payload;
+        return $next($request+2);
+    }
+
+    public function invoke($request, \Closure $next)
+    {
+        $request++;
+
+        return $next($request);
     }
 }
 
 
-class PipelineTestPipeTwo
+class PipelineTestPipeTwo implements MiddlewareInterface
 {
-    public function __invoke($payload)
+
+    public function invoke($request, Closure $next, $a, $b, $c)
     {
-        return $payload;
+        $request++;
+        return $next($request);
+    }
+
+    public function handle($request, Closure $next)
+    {
+        return $next($request+2);
     }
 }
 
-class PipelineTestPipeThree
-{
-    public function __invoke($payload)
-    {
-        $count = count($payload);
-        unset($payload[$count-1]);
-        return $payload;
-    }
-}

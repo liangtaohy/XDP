@@ -2,67 +2,137 @@
 /**
  * Created by PhpStorm.
  * User: shiwenyuan
- * Date: 2018/8/21 13341007105@163.com
- * Time: 上午10:17
+ * Date: 2018/8/23 13341007105@163.com
+ * Time: 下午1:19
  */
+
 namespace Xdp\Pipeline;
 
+use Closure;
+use Xdp\Container\Container;
 use Xdp\Contract\Pipeline\PipeLineInterface;
-use Xdp\Contract\Pipeline\ProcessorInterface;
 
 /**
- * Class Pipeline 管道类
+ * Class Pipeline
  * @package Xdp\Pipeline
  */
 class Pipeline implements PipeLineInterface
 {
-
     /**
-     * @var ProcessorInterface|FingersCrossedProcessor
+     * 容器对象
+     * @var \Xdp\Container\Container
      */
-    private $processor;
+    protected $container;
     /**
-     * @var array|callable[]
+     * 准备通过管道,最终传入$destination处理的对象
+     *
+     * @var mixed
      */
-    private $stages = [];
+    protected $passable;
+    /**
+     * 管道集合
+     * @var array
+     */
+    protected $pipes = array();
+    /**
+     * 每个管道调用的方法名
+     *
+     * @var string
+     */
+    protected $method = 'handle';
 
     /**
      * Pipeline constructor.
-     * @param ProcessorInterface|null $processor
-     * @param callable[] ...$stages
+     * @param Container $container
      */
-    public function __construct(ProcessorInterface $processor = null, callable ...$stages)
+    public function __construct(Container $container)
     {
-        $this->processor = $processor ?? new FingersCrossedProcessor();
-        $this->stages = $stages;
+        $this->container = $container;
     }
-
     /**
-     * @param callable $stage
-     * @return PipeLine
+     * 将对象放入管道
+     * @param  mixed $passable
+     * @return $this
      */
-    public function pipe(callable $stage):PipeLineInterface
+    public function send($passable)
     {
-        $pipeline = clone $this;
-        $pipeline->stages[] = $stage;
-        return $pipeline;
+        $this->passable = $passable;
+        return $this;
     }
-
     /**
-     * @param $payload
+     * 放置需要通过的管道
+     * @param  array|mixed $pipes
+     * @return $this
+     */
+    public function through($pipes)
+    {
+        $this->pipes = is_array($pipes) ? $pipes : func_get_args();
+        return $this;
+    }
+    /**
+     * 让 $passable 通过所有管道后传入$destination,最后返回 $destination 的执行结果
+     * @param  Closure $destination
      * @return mixed
      */
-    public function process($payload)
+    public function then(Closure $destination)
     {
-        return $this->processor->process($payload, ...$this->stages);
+        $firstSlice = function ($passable) use ($destination) {
+            return call_user_func($destination, $passable);
+        };
+        $pipes = array_reverse($this->pipes);
+        return call_user_func(
+            array_reduce($pipes, $this->getSlice(), $firstSlice),
+            $this->passable
+        );
     }
 
+
     /**
-     * @param $payload
-     * @return mixed
+     * 设置默认method
+     * @param string $method
+     * @return $this
      */
-    public function __invoke($payload)
+    public function via(string $method)
     {
-        return $this->process($payload);
+        $this->method = $method ;
+        return $this;
+    }
+
+
+    /**
+     * 获取一个表示应用洋葱的切片的闭包
+     * @return Closure
+     */
+    protected function getSlice()
+    {
+        return function ($stack, $pipe) {
+            return function ($passable) use ($stack, $pipe) {
+                //如果是Closure实例,直接调用
+                if ($pipe instanceof Closure) {
+                    return call_user_func($pipe, $passable, $stack);
+                } else {
+                    //解析名称和参数值,并从容器中获取对象
+                    list($name, $parameters) = $this->parsePipeString($pipe);
+                    return call_user_func_array(
+                        array($this->container->resolve($name), $this->method),
+                        array_merge(array($passable, $stack), $parameters)
+                    );
+                }
+            };
+        };
+    }
+    /**
+     * 解析字符串,得到名称和参数值
+     * 例如 "throttle:60,1"
+     * @param  string $pipe
+     * @return array
+     */
+    protected function parsePipeString($pipe)
+    {
+        list($name, $parameters) = array_pad(explode(':', $pipe, 2), 2, array());
+        if (is_string($parameters)) {
+            $parameters = explode(',', $parameters);
+        }
+        return array($name, $parameters);
     }
 }

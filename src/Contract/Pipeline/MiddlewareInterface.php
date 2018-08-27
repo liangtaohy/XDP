@@ -13,12 +13,16 @@ namespace Xdp\Contract\Pipeline;
  * Interface StageInterface
  * @package Xdp\Contract\Pipeline
  */
-interface StageInterface
+use Closure;
+
+interface MiddlewareInterface
 {
     /**
-     * @link http://php.net/manual/zh/language.oop5.magic.php#object.invoke
-     * @param $payload
+     * 中间件默认方法
+     * 方法中必须实现$next($request) 否则则不会往下执行
+     * @param $request
+     * @param Closure $next
      * @return mixed
      */
-    public function __invoke($payload);
+    public function handle($request, Closure $next);
 }
