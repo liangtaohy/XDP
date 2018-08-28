@@ -189,7 +189,6 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      */
     public function make($key, $class = '', array $args = [])
     {
-
         if ($this->storage->hasObject($key)) {
             return $this->storage->getDefinition($key);
         }

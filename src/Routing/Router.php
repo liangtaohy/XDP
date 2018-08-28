@@ -18,6 +18,7 @@ use Xdp\Http\Response;
 use ArrayObject;
 use JsonSerializable;
 use Xdp\Pipeline\Pipeline;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class Router
 {
@@ -212,6 +213,8 @@ class Router
             || $response instanceof JsonSerializable
             || is_array($response)) {
             $response = new JsonResponse($response);
+        } else if (! $response instanceof SymfonyResponse) {
+            $response = new Response($response);
         }
 
         return $response->prepare($request);

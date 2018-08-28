@@ -33,7 +33,7 @@ class Pipeline implements PipeLineInterface
      * 管道集合
      * @var array
      */
-    protected $pipes = array();
+    protected $pipes = [];
     /**
      * 每个管道调用的方法名
      *

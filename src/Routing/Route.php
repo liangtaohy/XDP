@@ -16,6 +16,7 @@ use Xdp\Routing\Matching\UrlValidator;
 use Xdp\Utils\Arr;
 use Xdp\Utils\Str;
 use Symfony\Component\Routing\Route as SymfonyRoute;
+use LogicException;
 
 class Route
 {
@@ -181,6 +182,32 @@ class Route
     }
 
     /**
+     * 获取Controller实例
+     *
+     * @return object|\Xdp\Contract\Routing\Controller
+     */
+    public function getController()
+    {
+        if (! $this->controller) {
+            $controller = $this->parseControllerCallback()[0];
+            $this->controller = $this->container->resolve($controller);
+            var_dump($this->controller);
+        }
+
+        return $this->controller;
+    }
+
+    /**
+     * 获取controller method
+     *
+     * @return mixed
+     */
+    public function getControllerMethod()
+    {
+        return $this->parseControllerCallback()[1];
+    }
+
+    /**
      * 获取middleware或设置middleware
      *
      * @param array|string $middleware
@@ -306,8 +333,8 @@ class Route
         if ($this->isControllerAction()) {
             $callback = $this->parseControllerCallback();
 
-            $this->controllerDispatcher()->dispatch(
-                $this, $callback[0], $callback[1]
+            return $this->controllerDispatcher()->dispatch(
+                $this, $this->getController(), $this->getControllerMethod()
             );
         }
 
@@ -549,7 +576,7 @@ class Route
      * 判断是否为controller action
      * @return bool
      */
-    protected function isControllerAction()
+    public function isControllerAction()
     {
         return is_string($this->action['uses']);
     }
@@ -562,5 +589,17 @@ class Route
     protected function parseControllerCallback()
     {
         return Str::parseCallback($this->action['uses']);
+    }
+
+    /**
+     * 获取参数
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function __get($name)
+    {
+        // TODO: Implement __get() method.
+        return $this->parameter($name);
     }
 }

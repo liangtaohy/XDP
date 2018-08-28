@@ -10,6 +10,7 @@ namespace Xdp\Routing;
 
 class ControllerDispatcher implements \Xdp\Contract\Routing\ControllerDispatcher
 {
+    use RouteDependenciesTrait;
     /**
      * 把请求分发给指定的controller和方法method
      *
@@ -20,7 +21,7 @@ class ControllerDispatcher implements \Xdp\Contract\Routing\ControllerDispatcher
      */
     public function dispatch(Route $route, $controller, $method)
     {
-        $parameters = [];
+        $parameters = $this->resolveClassMethodDependencies($route->parametersWithoutNulls(), $controller, $method);
 
         if (method_exists($controller, 'callAction')) {
             return $controller->callAction($method, $parameters);
