@@ -69,6 +69,12 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         if (!\is_string($key) || empty($key)) {
             throw new ContainerException('$key must be a string');
         }
+
+        if ($this->storage->hasAlias($key)) {
+            return $this->storage->getAlias($key);
+        }
+
+
         if ($this->storage->hasStored($key)) {
             return $this->storage->getStored($key);
         }
@@ -95,7 +101,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      */
     public function has(string $key): bool
     {
-        return $this->storage->hasObject($key) || $this->storage->hasFactory($key);
+        return $this->storage->hasObject($key) || $this->storage->hasFactory($key) || $this->storage->hasAlias($key);
     }
 
     /**
@@ -180,16 +186,16 @@ class Container extends ContainerArrayAccess implements ContainerInterface
 
     /**
      * @param $key
+     * @param string $alias
      * @param string $class
-     * @param array $args
      * @return mixed|object
      * @throws ContainerException
      * @throws Exception\InvalidKeyException
      * @throws Exception\KeyExistsException
      */
-    public function make($key, $class = '', array $args = [])
+    public function make($key, $alias = '', $class = '')
     {
-
+        //检测类是否存在
         if ($this->storage->hasObject($key)) {
             return $this->storage->getDefinition($key);
         }
@@ -197,9 +203,25 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         if (empty($class)) {
             $class = $key;
         }
+        //实例化类
         $abstract = $this->resolve((string)$class);
         $this->addInstance((string)$key, $abstract);
+
+        if (!empty($alias) && is_object($abstract)) {
+            $this->addAlias($alias, $key);
+        }
         return $abstract;
+    }
+
+
+
+    /**
+     * @param string $alias
+     * @param string $key
+     */
+    public function addAlias(string $alias, string $key)
+    {
+        $this->storage->alias($alias, $key);
     }
 
 
