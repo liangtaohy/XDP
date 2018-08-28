@@ -19,8 +19,8 @@ class TestContainer extends TestCase
     public function testContainerMake()
     {
         $con = new Container();
-        $test_case1 = $con->make('testCaseOne', '\XdpTest\Container\testCaseOne');
-        $test_case2 = $con->get('testCaseOne');
+        $test_case1 = $con->make('\XdpTest\Container\testCaseOne', 'shiwenyuan','\XdpTest\Container\testCaseOne');
+        $test_case2 = $con->get('shiwenyuan');
         $this->assertEquals($test_case1, $test_case2);
         $con = new Container();
         $test_case1 = $con->make(\XdpTest\Container\testCaseOne::class);

@@ -31,6 +31,13 @@ class ObjectStorage
      */
     private $store = [];
 
+
+    /**
+     * 保存key别名
+     * @var array
+     */
+    private $alias = [];
+
     /**
      * @param string $key
      * @param callable $closure
@@ -76,6 +83,28 @@ class ObjectStorage
     public function store(string $key, $object)
     {
         $this->store[$key] = $object;
+    }
+
+
+    /**
+     * 注入一个key别名
+     * @param string $alias
+     * @param string $key
+     */
+    public function alias(string $alias, string $key)
+    {
+        $this->alias[$alias] = $key;
+    }
+
+
+    /**
+     * 别名是否存在
+     * @param string $alias
+     * @return bool
+     */
+    public function hasAlias(string $alias)
+    {
+        return isset($this->alias[$alias]);
     }
 
     /**
@@ -134,6 +163,16 @@ class ObjectStorage
     }
 
     /**
+     * 获取别名类
+     * @param string $key
+     * @return mixed
+     */
+    public function getAlias(string $key)
+    {
+        return $this->store[$this->alias[$key]];
+    }
+
+    /**
      * @param string $key
      * @return bool
      */
@@ -160,9 +199,9 @@ class ObjectStorage
      */
     protected function checkKey(string $key)
     {
-//        if (! class_exists($key)) {
-//            throw new InvalidKeyException("Key [$key] was invalid. All keys must be valid class names");
-//        }
+        if (! class_exists($key)) {
+            throw new InvalidKeyException("Key [$key] was invalid. All keys must be valid class names");
+        }
 
         if ($this->hasObject($key) || $this->hasFactory($key)) {
             throw new KeyExistsException("Key [$key] already exists within the container");
