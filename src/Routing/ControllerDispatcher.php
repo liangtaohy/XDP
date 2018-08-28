@@ -8,9 +8,24 @@
 
 namespace Xdp\Routing;
 
+use Xdp\Container\Container;
+
 class ControllerDispatcher implements \Xdp\Contract\Routing\ControllerDispatcher
 {
     use RouteDependenciesTrait;
+
+    /**
+     * 容器实例
+     *
+     * @var Container
+     */
+    protected $container;
+
+    public function __construct(Container $container)
+    {
+        $this->container = $container;
+    }
+
     /**
      * 把请求分发给指定的controller和方法method
      *

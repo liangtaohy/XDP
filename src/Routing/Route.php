@@ -348,7 +348,7 @@ class Route
      */
     public function controllerDispatcher()
     {
-        return new ControllerDispatcher();
+        return new ControllerDispatcher($this->container);
     }
 
     /**

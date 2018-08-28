@@ -64,6 +64,33 @@ class RouterTest extends TestCase
             $this->assertTrue($e instanceof \BadMethodCallException);
         }
     }
+
+    public function testMiddleware()
+    {
+        $router = new Router(new Container());
+
+        $route = $router->get("/api/say/{content}", [
+            'http',
+            ContentController::class,
+            'middleware' => []
+        ]);
+    }
+}
+
+class ContentMiddlewareStub
+{
+    public function handle($request, $next)
+    {
+        ;
+    }
+}
+
+class ContentController extends Controller
+{
+    public function handle($content)
+    {
+        return ['code'=>0, 'content' => $content];
+    }
 }
 
 class HelloWorldController extends Controller
