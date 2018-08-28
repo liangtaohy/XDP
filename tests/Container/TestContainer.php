@@ -16,6 +16,18 @@ use Xdp\Container\Container;
 
 class TestContainer extends TestCase
 {
+    public function testContainerMake()
+    {
+        $con = new Container();
+        $test_case1 = $con->make('testCaseOne', '\XdpTest\Container\testCaseOne');
+        $test_case2 = $con->get('testCaseOne');
+        $this->assertEquals($test_case1, $test_case2);
+        $con = new Container();
+        $test_case1 = $con->make(\XdpTest\Container\testCaseOne::class);
+        $test_case2 = $con->get(\XdpTest\Container\testCaseOne::class);
+        $this->assertEquals($test_case1, $test_case2);
+    }
+
     public function testContainerArray()
     {
         $con = new Container();
@@ -26,7 +38,7 @@ class TestContainer extends TestCase
         $this->assertEquals($test_case, new testCaseOne());
     }
 
-    /*public function testContainerObj()
+    public function testContainerObj()
     {
         $con = new Container();
         $con->add('XdpTest\Container\testCaseOne', function () {return new testCaseOne();});
@@ -69,7 +81,7 @@ class TestContainer extends TestCase
         $con->addSingleton('\XdpTest\Container\testCaseOne',function (){ return new \XdpTest\Container\testCaseOne();});
         $one = $con->get('\XdpTest\Container\testCaseOne');
         $this->assertEquals($one, new testCaseOne());
-    }*/
+    }
 }
 
 class testCaseOne

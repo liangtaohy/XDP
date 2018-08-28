@@ -26,6 +26,7 @@ class ObjectStorage
     ];
 
     /**
+     * 保存已初始化的类
      * @var array
      */
     private $store = [];
@@ -159,9 +160,9 @@ class ObjectStorage
      */
     protected function checkKey(string $key)
     {
-        if (! class_exists($key)) {
-            throw new InvalidKeyException("Key [$key] was invalid. All keys must be valid class names");
-        }
+//        if (! class_exists($key)) {
+//            throw new InvalidKeyException("Key [$key] was invalid. All keys must be valid class names");
+//        }
 
         if ($this->hasObject($key) || $this->hasFactory($key)) {
             throw new KeyExistsException("Key [$key] already exists within the container");

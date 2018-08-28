@@ -47,7 +47,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     /**
      * 注入一个对象
      * 通过该方法注入类时 $closure 必须为一个闭包函数
-     * @param string $key  检索时的 $key
+     * @param string $key 检索时的 $key
      * @param callable $closure
      * @throws Exception\InvalidKeyException
      * @throws Exception\KeyExistsException
@@ -66,7 +66,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      */
     public function get(string $key)
     {
-        if (! \is_string($key) || empty($key)) {
+        if (!\is_string($key) || empty($key)) {
             throw new ContainerException('$key must be a string');
         }
         if ($this->storage->hasStored($key)) {
@@ -93,7 +93,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      * @param $key
      * @return bool|mixed
      */
-    public function has(string $key):bool
+    public function has(string $key): bool
     {
         return $this->storage->hasObject($key) || $this->storage->hasFactory($key);
     }
@@ -134,7 +134,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      * @param string $key
      * @return bool
      */
-    public function remove(string $key):bool
+    public function remove(string $key): bool
     {
         return $this->storage->remove($key);
     }
@@ -177,6 +177,32 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         return $reflectionClass->newInstanceArgs($resolutions);
     }
 
+
+    /**
+     * @param $key
+     * @param string $class
+     * @param array $args
+     * @return mixed|object
+     * @throws ContainerException
+     * @throws Exception\InvalidKeyException
+     * @throws Exception\KeyExistsException
+     */
+    public function make($key, $class = '', array $args = [])
+    {
+
+        if ($this->storage->hasObject($key)) {
+            return $this->storage->getDefinition($key);
+        }
+
+        if (empty($class)) {
+            $class = $key;
+        }
+        $abstract = $this->resolve((string)$class);
+        $this->addInstance((string)$key, $abstract);
+        return $abstract;
+    }
+
+
     /**
      * 返回$class的$method方法
      * @param $class
@@ -187,7 +213,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      */
     public function resolveMethod($class, string $method, array $args = [])
     {
-        if (! \is_callable([$class, $method])) {
+        if (!\is_callable([$class, $method])) {
             throw new ContainerException("$class::$method does not exist or is not callable so could not be resolved");
         }
 
@@ -246,7 +272,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      * @throws ContainerException
      * @throws NotFoundException
      */
-    private function resolveFromContainer(string $className):bool
+    private function resolveFromContainer(string $className): bool
     {
         if ($this->has($className)) {
             $this->addToStack($this->get($className));
