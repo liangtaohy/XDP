@@ -50,6 +50,9 @@ class TestContainer extends TestCase
         $test_case1 = $con->make(\XdpTest\Container\testCaseOne::class);
         $test_case2 = $con->get(\XdpTest\Container\testCaseOne::class);
         $this->assertEquals($test_case1, $test_case2);
+
+        $con->instance("path", __DIR__);
+        $this->assertEquals(__DIR__, $con['path']);
     }
 
     /**

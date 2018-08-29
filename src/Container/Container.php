@@ -25,6 +25,11 @@ class Container extends ContainerArrayAccess implements ContainerInterface
 {
 
     /**
+     * @var ContainerInterface
+     */
+    private static $instance = null;
+
+    /**
      * 对象容器类
      * @var ObjectStorage
      */
@@ -42,6 +47,30 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     public function __construct()
     {
         $this->storage = new ObjectStorage();
+    }
+
+    /**
+     * 返回容器单例
+     *
+     * @return ContainerInterface
+     */
+    public static function getInstance()
+    {
+        if (!isset(static::$instance)) {
+            static::$instance = new static;
+        }
+
+        return static::$instance;
+    }
+
+    /**
+     * 容器单例
+     *
+     * @param ContainerInterface $instance
+     */
+    public static function setInstance(ContainerInterface $instance)
+    {
+        static::$instance = $instance;
     }
 
     /**
@@ -80,6 +109,10 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         $this->storage->singleton($key, $object);
     }
 
+    public function instance($key, $object)
+    {
+        $this->addInstance($key, $object);
+    }
 
     /**
      * 注入一个实例化好的对象
@@ -93,10 +126,8 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     {
         if (is_object($key)) {
             $this->storage->instance(get_class($key), $key);
-        } elseif (is_object($object)) {
-            $this->storage->instance($key, $object);
         } else {
-            throw new ContainerException('An object instance must be passed');
+            $this->storage->instance($key, $object);
         }
 
         return $this;
