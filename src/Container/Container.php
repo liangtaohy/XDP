@@ -45,17 +45,63 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     }
 
     /**
-     * 注入一个对象
-     * 通过该方法注入类时 $closure 必须为一个闭包函数
-     * @param string $key 检索时的 $key
+     * 注入一个key
+     * @param string $key
      * @param callable $closure
-     * @throws Exception\InvalidKeyException
      * @throws Exception\KeyExistsException
      */
     public function add(string $key, callable $closure)
     {
         $this->storage->factory($key, $closure);
     }
+
+
+    /**
+     * 添加别名
+     * @param string $alias
+     * @param string $key
+     * @return $this
+     */
+    public function addAlias(string $alias, string $key)
+    {
+        $this->storage->alias($alias, $key);
+        return $this;
+    }
+
+
+    /**
+     * 注入一个单例对象
+     * @param string $key
+     * @param $object
+     * @throws Exception\KeyExistsException
+     */
+    public function addSingleton(string $key, $object)
+    {
+        $this->storage->singleton($key, $object);
+    }
+
+
+    /**
+     * 注入一个实例化好的对象
+     * @param $key
+     * @param null $object
+     * @return $this
+     * @throws ContainerException
+     * @throws Exception\KeyExistsException
+     */
+    public function addInstance($key, $object = null)
+    {
+        if (is_object($key)) {
+            $this->storage->instance(get_class($key), $key);
+        } elseif (is_object($object)) {
+            $this->storage->instance($key, $object);
+        } else {
+            throw new ContainerException('An object instance must be passed');
+        }
+
+        return $this;
+    }
+
 
     /**
      * 获取一个实例化好的对象
@@ -66,22 +112,22 @@ class Container extends ContainerArrayAccess implements ContainerInterface
      */
     public function get(string $key)
     {
-        if (!\is_string($key) || empty($key)) {
-            throw new ContainerException('$key must be a string');
+
+        if (!is_string($key) || empty($key)) {
+            throw new ContainerException("$key must be a string");
         }
 
         if ($this->storage->hasAlias($key)) {
-            return $this->storage->getAlias($key);
+            $key = $this->storage->getAlias($key);
         }
-
 
         if ($this->storage->hasStored($key)) {
             return $this->storage->getStored($key);
         }
 
         // $key存在 但是没有被初始化
-        if ($this->storage->hasObject($key)) {
-            $this->storage->store($key, $this->storage->getDefinition($key)($this));
+        if ($this->storage->hasInstance($key)) {
+            $this->storage->store($key, $this->storage->getInstance($key));
             return $this->storage->getStored($key);
         }
 
@@ -95,45 +141,156 @@ class Container extends ContainerArrayAccess implements ContainerInterface
 
 
     /**
-     * 检测给定值是否存在
      * @param $key
-     * @return bool|mixed
-     */
-    public function has(string $key): bool
-    {
-        return $this->storage->hasObject($key) || $this->storage->hasFactory($key) || $this->storage->hasAlias($key);
-    }
-
-    /**
-     * 注入一个对象
-     * @param string $key
-     * @param callable $closure
-     * @throws Exception\InvalidKeyException
-     * @throws Exception\KeyExistsException
-     */
-    public function addSingleton(string $key, callable $closure)
-    {
-        $this->storage->object($key, $closure);
-    }
-
-    /**
-     * 注入一个实例化好的对象
-     * @param $key
-     * @param null $object
+     * @param string $alias
+     * @param string $class
+     * @return mixed|object
      * @throws ContainerException
-     * @throws Exception\InvalidKeyException
      * @throws Exception\KeyExistsException
      */
-    public function addInstance($key, $object = null)
+    public function make($key, $class = '', $alias = '')
     {
-        if (\is_object($key)) {
-            $this->storage->instance(\get_class($key), $key);
-        } elseif (\is_object($object)) {
-            $this->storage->instance($key, $object);
+        //检测类是否存在
+        if ($this->storage->hasInstance($key)) {
+            return $this->storage->getInstance($key) == true ? $this->storage->getStored($key) : $this->storage->getInstance($key);
+        }
+
+        if (empty($class)) {
+            $class = $key;
+        }
+        //实例化类
+        $abstract = $this->resolve((string)$class);
+        $this->addSingleton((string)$key, $abstract);
+
+        if (!empty($alias) && is_object($abstract)) {
+            $this->addAlias($alias, $key);
+        }
+        return $abstract;
+    }
+
+
+
+
+
+
+    /**
+     * 返回$class的$method方法
+     * @param $class
+     * @param string $method
+     * @param array $args
+     * @return mixed
+     * @throws ContainerException
+     */
+    public function resolveMethod($class, string $method, array $args = [])
+    {
+        if (!\is_callable([$class, $method])) {
+            throw new ContainerException("$class::$method does not exist or is not callable so could not be resolved");
+        }
+
+        $reflectionMethod = new ReflectionMethod($class, $method);
+
+        if ($reflectionMethod->isStatic()) {
+            $classInstance = null;
+        } elseif (\is_string($class)) {
+            $classInstance = new $class();
         } else {
-            throw new ContainerException('An object instance must be passed');
+            $classInstance = $class;
+        }
+
+        //获取Method需要的参数
+        $params = $reflectionMethod->getParameters();
+        if (\count($params) === 0) {
+            if ($reflectionMethod->isStatic() === true) {
+                $this->resetStack();
+                return $reflectionMethod->invoke(null);
+            } else {
+                $this->resetStack();
+                return $reflectionMethod->invoke($classInstance);
+            }
+        }
+
+        $this->resolveParams($params, $args);
+
+        $resolutions = end($this->stack);
+        $this->resetStack();
+
+        return $reflectionMethod->invokeArgs($classInstance, $resolutions);
+    }
+
+
+
+    /**
+     * 在容器中搜索类名 如果存在 则添加到相对应的请求方法参数中
+     * @param string $className
+     * @return bool
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    private function resolveFromContainer(string $className): bool
+    {
+        if ($this->has($className)) {
+            $this->addToStack($this->get($className));
+            return true;
+        }
+        return false;
+    }
+
+
+
+
+
+
+    /**
+     * 获取需要的参数
+     * @param array $args
+     * @param ReflectionParameter $param
+     */
+    private function resolveParam(array $args, ReflectionParameter $param)
+    {
+        $name = $param->name;
+
+        if (isset($args[$name])) {
+            $this->addToStack($args[$name]);
+            return;
+        }
+
+        if ($param->isDefaultValueAvailable()) {
+            $this->addToStack($param->getDefaultValue());
         }
     }
+
+
+
+
+    /**
+     * 获取需要的多个参数
+     * @param $params
+     * @param $args
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    private function resolveParams($params, $args)
+    {
+        foreach ($params as $param) {
+            $class = $param->getClass();
+
+            if (is_null($class)) {
+                $this->resolveParam($args, $param);
+                continue;
+            }
+
+            $className = $class->getName();
+
+            if ($this->resolveFromContainer($className)) {//如果class存在容器里
+                continue;
+            }
+
+            $this->addToStack($this->resolve($className, $args));//获取class实例 添加到容器
+        }
+    }
+
+
+
 
     /**
      * 删除$key
@@ -183,91 +340,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         return $reflectionClass->newInstanceArgs($resolutions);
     }
 
-
-    /**
-     * @param $key
-     * @param string $alias
-     * @param string $class
-     * @return mixed|object
-     * @throws ContainerException
-     * @throws Exception\InvalidKeyException
-     * @throws Exception\KeyExistsException
-     */
-    public function make($key, $alias = '', $class = '')
-    {
-        //检测类是否存在
-        if ($this->storage->hasObject($key)) {
-            return $this->storage->getDefinition($key);
-        }
-
-        if (empty($class)) {
-            $class = $key;
-        }
-        //实例化类
-        $abstract = $this->resolve((string)$class);
-        $this->addInstance((string)$key, $abstract);
-
-        if (!empty($alias) && is_object($abstract)) {
-            $this->addAlias($alias, $key);
-        }
-        return $abstract;
-    }
-
-
-
-    /**
-     * @param string $alias
-     * @param string $key
-     */
-    public function addAlias(string $alias, string $key)
-    {
-        $this->storage->alias($alias, $key);
-    }
-
-
-    /**
-     * 返回$class的$method方法
-     * @param $class
-     * @param string $method
-     * @param array $args
-     * @return mixed
-     * @throws ContainerException
-     */
-    public function resolveMethod($class, string $method, array $args = [])
-    {
-        if (!\is_callable([$class, $method])) {
-            throw new ContainerException("$class::$method does not exist or is not callable so could not be resolved");
-        }
-
-        $reflectionMethod = new ReflectionMethod($class, $method);
-
-        if ($reflectionMethod->isStatic()) {
-            $classInstance = null;
-        } elseif (\is_string($class)) {
-            $classInstance = new $class();
-        } else {
-            $classInstance = $class;
-        }
-
-        //获取Method需要的参数
-        $params = $reflectionMethod->getParameters();
-        if (\count($params) === 0) {
-            if ($reflectionMethod->isStatic() === true) {
-                $this->resetStack();
-                return $reflectionMethod->invoke(null);
-            } else {
-                $this->resetStack();
-                return $reflectionMethod->invoke($classInstance);
-            }
-        }
-
-        $this->resolveParams($params, $args);
-
-        $resolutions = end($this->stack);
-        $this->resetStack();
-
-        return $reflectionMethod->invokeArgs($classInstance, $resolutions);
-    }
+    
 
     /**
      * 删除stack数组中第一个值
@@ -277,6 +350,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         array_pop($this->stack);
     }
 
+    
     /**
      * 添加类或方法需要的参数
      * @param $value
@@ -287,65 +361,14 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         $this->stack[end($keys)][] = $value;
     }
 
-    /**
-     * 在容器中搜索类名 如果存在 则添加到相对应的请求方法参数中
-     * @param string $className
-     * @return bool
-     * @throws ContainerException
-     * @throws NotFoundException
-     */
-    private function resolveFromContainer(string $className): bool
-    {
-        if ($this->has($className)) {
-            $this->addToStack($this->get($className));
-            return true;
-        }
-        return false;
-    }
 
     /**
-     * 获取需要的多个参数
-     * @param $params
-     * @param $args
-     * @throws ContainerException
-     * @throws NotFoundException
+     * 检测给定值是否存在
+     * @param $key
+     * @return bool|mixed
      */
-    private function resolveParams($params, $args)
+    public function has(string $key): bool
     {
-        foreach ($params as $param) {
-            $class = $param->getClass();
-
-            if (is_null($class)) {
-                $this->resolveParam($args, $param);
-                continue;
-            }
-
-            $className = $class->getName();
-
-            if ($this->resolveFromContainer($className)) {//如果class存在容器里
-                continue;
-            }
-
-            $this->addToStack($this->resolve($className, $args));//获取class实例 添加到容器
-        }
-    }
-
-    /**
-     * 获取需要的参数
-     * @param array $args
-     * @param ReflectionParameter $param
-     */
-    private function resolveParam(array $args, ReflectionParameter $param)
-    {
-        $name = $param->name;
-
-        if (isset($args[$name])) {
-            $this->addToStack($args[$name]);
-            return;
-        }
-
-        if ($param->isDefaultValueAvailable()) {
-            $this->addToStack($param->getDefaultValue());
-        }
+        return $this->storage->hasInstance($key) || $this->storage->hasFactory($key) || $this->storage->hasAlias($key);
     }
 }

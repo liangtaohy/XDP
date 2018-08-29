@@ -17,20 +17,25 @@ use Xdp\Container\Exception\KeyExistsException;
  */
 class ObjectStorage
 {
-    /**
-     * @var array
-     */
-    private $definitions = [
-        'instance' => [],
-        'factory'  => [],
-    ];
 
     /**
-     * 保存已初始化的类
+     * 保存单例类
      * @var array
      */
     private $store = [];
 
+    /**
+     * 保存绑定的类
+     * @var array 
+     */
+    private $factory = [];
+
+
+    /**
+     * 保存实例化的类
+     * @var array 
+     */
+    public $instance = [];
 
     /**
      * 保存key别名
@@ -39,39 +44,38 @@ class ObjectStorage
     private $alias = [];
 
     /**
+     * 注册一个对象
      * @param string $key
-     * @param callable $closure
-     * @throws InvalidKeyException
+     * @param  $closure
      * @throws KeyExistsException
      */
-    public function object(string $key, callable $closure)
+    public function instance(string $key,  $closure)
     {
         $this->checkKey($key);
-        $this->definitions['instance'][$key] = $closure;
+        $this->instance[$key] = $closure;
     }
 
     /**
      * @param string $key
-     * @param callable $closure
-     * @throws InvalidKeyException
+     * @param  $closure
      * @throws KeyExistsException
      */
-    public function factory(string $key, callable $closure)
+    public function factory(string $key, $closure)
     {
         $this->checkKey($key);
-        $this->definitions['factory'][$key] = $closure;
+        $this->factory[$key] = $closure;
     }
 
     /**
+     * 注册一个单例对象
      * @param string $key
      * @param $object
-     * @throws InvalidKeyException
      * @throws KeyExistsException
      */
-    public function instance(string $key, $object)
+    public function singleton(string $key, $object)
     {
         $this->checkKey($key);
-        $this->definitions['instance'][$key] = true;
+        $this->instance[$key] = true;
         $this->store[$key] = $object;
     }
 
@@ -111,9 +115,9 @@ class ObjectStorage
      * @param string $key
      * @return bool
      */
-    public function hasObject(string $key)
+    public function hasInstance(string $key)
     {
-        return isset($this->definitions['instance'][$key]);
+        return isset($this->instance[$key]);
     }
 
     /**
@@ -122,7 +126,7 @@ class ObjectStorage
      */
     public function hasFactory(string $key)
     {
-        return isset($this->definitions['factory'][$key]);
+        return isset($this->factory[$key]);
     }
 
     /**
@@ -138,9 +142,9 @@ class ObjectStorage
      * @param $key
      * @return mixed
      */
-    public function getDefinition($key)
+    public function getInstance($key)
     {
-        return $this->definitions['instance'][$key];
+        return $this->instance[$key];
     }
 
     /**
@@ -159,7 +163,7 @@ class ObjectStorage
      */
     public function getFactory(string $key)
     {
-        return $this->definitions['factory'][$key];
+        return $this->factory[$key];
     }
 
     /**
@@ -169,7 +173,7 @@ class ObjectStorage
      */
     public function getAlias(string $key)
     {
-        return $this->store[$this->alias[$key]];
+        return $this->alias[$key];
     }
 
     /**
@@ -179,13 +183,19 @@ class ObjectStorage
     public function remove(string $key)
     {
         if ($this->hasFactory($key)) {
-            unset($this->definitions['factory'][$key]);
+            unset($this->factory[$key]);
             return ! $this->hasFactory($key);
         }
 
-        if ($this->hasObject($key)) {
-            unset($this->definitions['instance'][$key], $this->store[$key]);
-            return ! $this->hasObject($key);
+        if ($this->hasInstance($key)) {
+            unset($this->instance[$key], $this->store[$key]);
+            return ! $this->hasInstance($key);
+        }
+        
+        if ($this->hasAlias($key)) {
+            $alias_key = $this->getAlias($key);
+            unset($this->alias[$key]);
+            $this->remove($alias_key);
         }
 
         return false;
@@ -194,16 +204,15 @@ class ObjectStorage
     /**
      * 检测$key
      * @param string $key
-     * @throws InvalidKeyException
      * @throws KeyExistsException
      */
     protected function checkKey(string $key)
     {
-        if (! class_exists($key)) {
+        /*if (! class_exists($key)) {
             throw new InvalidKeyException("Key [$key] was invalid. All keys must be valid class names");
-        }
+        }*/
 
-        if ($this->hasObject($key) || $this->hasFactory($key)) {
+        if ($this->hasInstance($key) || $this->hasFactory($key)) {
             throw new KeyExistsException("Key [$key] already exists within the container");
         }
     }
