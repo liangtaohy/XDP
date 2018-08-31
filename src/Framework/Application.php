@@ -14,6 +14,16 @@ use Xdp\Container\Container;
 class Application extends Container
 {
     /**
+     * 开发环境
+     */
+    const ENV_DEVELOPMENT = 'development';
+
+    /**
+     * 线上环境
+     */
+    const ENV_PRODUCT = 'product';
+
+    /**
      * 应用名称
      * @note 原框架中的APP_NAME
      * @var string
@@ -69,19 +79,22 @@ class Application extends Container
      * @param null $app_name
      * @param string|null $base_path
      */
-    public function __construct($app_name = null, string $base_path = null)
+    public function __construct(string $app_name = null, string $base_path = null)
     {
         parent::__construct();
-
-        if (is_null($app_name) || !defined('APP_NAME')) {
-            throw new \RuntimeException("App Name MUST BE set!");
-        }
 
         $this->setAppName($app_name);
 
         $this->setBasePath($base_path);
 
         $this->setBaseBinding();
+    }
+
+    public function bootstrapWith(array $bootstrappers = [])
+    {
+        foreach ($bootstrappers as $bootstrap) {
+            $this->make($bootstrap)->bootstrap($this);
+        }
     }
 
     /**
@@ -106,18 +119,6 @@ class Application extends Container
     public function setTag(string $tag = 'default')
     {
         $this->instance('tag', $tag);
-        return $this;
-    }
-
-    /**
-     * 设置时区time zone, 默认值为Asia/Shanghai
-     *
-     * @param string $zone
-     * @return $this
-     */
-    public function setTimeZone(string $zone = 'Asia/Shanghai')
-    {
-        $this->instance('data.timezone', $zone);
         return $this;
     }
 
@@ -291,7 +292,7 @@ class Application extends Container
      */
     public function environmentPath()
     {
-        return $this->environmentVarsPath() ?? $this->basePath();
+        return $this->path() ?? $this->basePath();
     }
 
     /**
@@ -302,5 +303,16 @@ class Application extends Container
     public function environmentFile()
     {
         return $this->env_file ?? '.env';
+    }
+
+    /**
+     * 获取app env
+     *
+     * @param $key
+     * @return mixed
+     */
+    public function environment($key)
+    {
+        return env('APP_ENV', self::ENV_DEVELOPMENT);
     }
 }

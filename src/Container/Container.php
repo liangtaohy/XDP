@@ -27,7 +27,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     /**
      * @var ContainerInterface
      */
-    private static $instance = null;
+    protected static $instance = null;
 
     /**
      * 对象容器类
@@ -97,6 +97,10 @@ class Container extends ContainerArrayAccess implements ContainerInterface
         return $this;
     }
 
+    public function singleton(string $key, $object)
+    {
+        $this->addSingleton($key, $object);
+    }
 
     /**
      * 注入一个单例对象
@@ -167,7 +171,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
             return $definition($this);
         }
         // the key was not found
-        throw new NotFoundException("The key [$key] could not be found");
+        throw new NotFoundException("The key [$key] could not be found or should be instantiation");
     }
 
 

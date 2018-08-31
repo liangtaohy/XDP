@@ -6,11 +6,12 @@
  * Time: 下午4:26
  */
 
-namespace Xdp\Framework;
+namespace Xdp\Framework\Foundation\Bootstrap;
 
 use Dotenv\Dotenv;
 use Dotenv\Exception\InvalidPathException;
 use Dotenv\Exception\InvalidFileException;
+use \Xdp\Framework\Application;
 
 class LoadEnvironmentVars
 {
@@ -21,7 +22,7 @@ class LoadEnvironmentVars
      * @param $app
      * @link https://github.com/vlucas/phpdotenv/blob/master/README.md
      */
-    public function bootstrap($app)
+    public function bootstrap(Application $app)
     {
         try {
             (new Dotenv($app->environmentPath(), $app->environmentFile()))->load();
