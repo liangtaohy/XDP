@@ -32,6 +32,12 @@ class Kernel implements KernelContract
 
     protected $middleware;
 
+    protected $bootstrappers = [
+        \Xdp\Framework\Foundation\Bootstrap\LoadEnvironmentVars::class,
+        \Xdp\Framework\Foundation\Bootstrap\LoadConfiguration::class,
+        \Xdp\Framework\Foundation\Bootstrap\HandleException::class,
+    ];
+
     /**
      * Kernel constructor.
      *
@@ -51,6 +57,9 @@ class Kernel implements KernelContract
      */
     public function bootstrap()
     {
+        if (method_exists($this->app, 'bootstrapWith')) {
+            $this->app->bootstrapWith($this->bootstrappers);
+        }
     }
 
     /**
