@@ -1198,3 +1198,16 @@ if (! function_exists('config')) {
         return app('config')->get($key, $default);
     }
 }
+
+if (! function_exists('microTime')) {
+    /**
+     * Get micro time
+     *
+     * @return int
+     */
+    function microTime()
+    {
+        $temp = explode(" ", microtime());
+        return intval(bcadd($temp[0], $temp[1], 6) * 1000);
+    }
+}
