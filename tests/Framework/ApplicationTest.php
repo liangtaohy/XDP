@@ -16,7 +16,7 @@ class ApplicationTest extends TestCase
 {
     static $bootstrappers = [
         \Xdp\Framework\Foundation\Bootstrap\LoadEnvironmentVars::class,
-        \Xdp\Framework\Foundation\Bootstrap\LoadLocals::class,
+        \Xdp\Framework\Foundation\Bootstrap\LoadConfiguration::class,
         \Xdp\Framework\Foundation\Bootstrap\HandleException::class,
     ];
 
@@ -31,11 +31,16 @@ class ApplicationTest extends TestCase
         $this->assertEquals('development', env('APP_ENV'));
         $this->assertEquals("http://localhost", env('APP_URL'));
 
-        echo $app['path'] . PHP_EOL;
-        echo $app['path.base'] . PHP_EOL;
+        echo PHP_EOL . $app['path'] . PHP_EOL;
+        echo PHP_EOL . $app['path.base'] . PHP_EOL;
 
-        new cc();
+        $this->assertTrue(isset($app['config']));
+
+        $items = config()->all();
+        $this->assertCount(1, $items);
+        $this->assertEquals('PHPMailer', config('mail.driver'));
+        $this->assertEquals('admin@xmanlegal.com', config('mail.from.account'));
     }
 }
 
-(new ApplicationTest())->testGlobalExceptionHandler();
+//(new ApplicationTest())->testGlobalExceptionHandler();

@@ -25,7 +25,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
 {
 
     /**
-     * @var ContainerInterface
+     * @var Container
      */
     protected static $instance = null;
 
@@ -52,7 +52,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     /**
      * 返回容器单例
      *
-     * @return ContainerInterface
+     * @return Container
      */
     public static function getInstance()
     {
@@ -187,7 +187,7 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     {
         //检测类是否存在
         if ($this->storage->hasInstance($key)) {
-            return $this->storage->getInstance($key) == true ? $this->storage->getStored($key) : $this->storage->getInstance($key);
+            return $this->storage->getInstance($key) === true ? $this->storage->getStored($key) : $this->storage->getInstance($key);
         }
 
         if (empty($class)) {
