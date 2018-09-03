@@ -13,7 +13,7 @@ interface Factory
     /**
      * 根据app的mail配置，选择mail
      *
-     * @note env("MAIL_DRIVER") := PHPMailer | RichSMTP | Swift_Mailer
+     * @note env("MAIL_DRIVER") := PHPMailer  Swift_Mailer
      *      默认配置为swift mailer
      * @note PHPMailer、RichSMTP主要为兼容旧的mail系统
      *
