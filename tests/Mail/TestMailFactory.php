@@ -20,8 +20,7 @@ class TestMailFactory extends TestCase
 
     public function testMailer()
     {
-
-        $date = (new MailFactory())->mailer();
-        var_dump($date);
+        $adapter = (new MailFactory())->mailer();
+        var_dump($adapter);
     }
 }

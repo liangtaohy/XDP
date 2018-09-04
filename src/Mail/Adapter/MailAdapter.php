@@ -8,10 +8,7 @@
 
 namespace Xdp\Mail\Adapter;
 
-use Xdp\Contract\Mail\Mailer;
 use Xdp\Utils\Traits\Singleton;
-use Swift_SmtpTransport;
-use Swift_Mailer;
 
 /**
  * mail适配器
@@ -85,6 +82,7 @@ trait MailAdapter
     public function __construct($config)
     {
         $this->config = $config;
+        $this->from($config['username'], $config['name']);
         return $this;
     }
 
@@ -97,6 +95,7 @@ trait MailAdapter
     public function setConfig($config)
     {
         $this->config = $config;
+        $this->from($config['username'], $config['name']);
         return $this;
     }
 
