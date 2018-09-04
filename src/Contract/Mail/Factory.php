@@ -8,16 +8,19 @@
 
 namespace Xdp\Contract\Mail;
 
+/**
+ * Interface Factory
+ * @package Xdp\Contract\Mail
+ */
 interface Factory
 {
     /**
      * 根据app的mail配置，选择mail
-     *
      * @note env("MAIL_DRIVER") := PHPMailer  Swift_Mailer
      *      默认配置为swift mailer
-     * @note PHPMailer、RichSMTP主要为兼容旧的mail系统
-     *
-     * @return \Xdp\Contract\Mail\Mailer
+     * @param  $driver
+     * @param null $user
+     * @return mixed
      */
-    public function mailer();
+    public function mailer($driver = 'SwiftMailer', $user = null);
 }

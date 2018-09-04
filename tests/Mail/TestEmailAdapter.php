@@ -11,7 +11,7 @@ require_once __DIR__ . "/../../vendor/autoload.php";
 
 
 use PHPUnit\Framework\TestCase;
-use Xdp\Mail\SwiftMailAdapter;
+use Xdp\Mail\Adapter\SwiftMailAdapter;
 
 class TestEmailAdapter extends TestCase
 {
@@ -19,7 +19,7 @@ class TestEmailAdapter extends TestCase
          'host' => 'smtp.mxhichina.com',
          'port'     => 25,
          'username' => 'admin@xmanlegal.com',
-         'password' => 'X2016Legal#www',
+         'password' => '',
          'name' => '未来法律',
      ];
 

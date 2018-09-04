@@ -8,7 +8,7 @@
 
 namespace Xdp\Test\Mail;
 use PHPUnit\Framework\TestCase;
-use Xdp\Mail\PhpMailerAdapter;
+use Xdp\Mail\Adapter\PhpMailerAdapter;
 
 require_once __DIR__ . "/../../vendor/autoload.php";
 
@@ -18,7 +18,7 @@ class TestPhpMailerAdapter extends TestCase
         'host' => 'smtp.mxhichina.com',
         'port'     => 465,
         'username' => 'admin@xmanlegal.com',
-        'password' => 'X2016Legal#www',
+        'password' => '',
         'name' => '未来法律',
         'charset'    => 'UTF-8',
         'SMTPDebug'  => 0,// 启用SMTP调试功能 0关闭
