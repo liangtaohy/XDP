@@ -8,7 +8,6 @@
 
 namespace Xdp\Mail\Adapter;
 
-
 use Xdp\Contract\Mail\Mailer;
 use Xdp\Utils\Traits\Singleton;
 use Swift_SmtpTransport;
@@ -84,6 +83,18 @@ trait MailAdapter
      * @param $config
      */
     public function __construct($config)
+    {
+        $this->config = $config;
+        return $this;
+    }
+
+
+    /**
+     * 重新设置config
+     * @param $config
+     * @return $this
+     */
+    public function setConfig($config)
     {
         $this->config = $config;
         return $this;
@@ -241,12 +252,14 @@ trait MailAdapter
     }
 
 
+    /**
+     * 清除邮件信息
+     */
     public function clear()
     {
         $this->text = null;
         $this->html = null;
         $this->subject = null;
-        $this->config = [];
         $this->to = [];
         $this->cc = [];
         $this->bcc = [];

@@ -12,6 +12,7 @@ namespace Xdp\Mail;
 use Xdp\Contract\Mail\Factory;
 use Xdp\Mail\Adapter\PhpMailerAdapter;
 use Xdp\Mail\Adapter\SwiftMailAdapter;
+use Xdp\Mail\Exception\MailException;
 
 class MailFactory implements Factory
 {
@@ -69,6 +70,13 @@ class MailFactory implements Factory
         ]
     ];*/
 
+    /**
+     *
+     * @param string $driver
+     * @param null $user
+     * @return mixed|static
+     * @throws MailException
+     */
     public function mailer($driver = 'SwiftMailer', $user = null)
     {
         $config = config('mail' . $driver . $user);
@@ -80,6 +88,8 @@ class MailFactory implements Factory
             case 'SwiftMail':
                 $adapter = SwiftMailAdapter::getInstance($config);
                 break;
+            default:
+                throw new MailException("undefined driver {$driver}");
         }
         return $adapter;
     }

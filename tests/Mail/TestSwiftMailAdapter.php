@@ -13,7 +13,7 @@ require_once __DIR__ . "/../../vendor/autoload.php";
 use PHPUnit\Framework\TestCase;
 use Xdp\Mail\Adapter\SwiftMailAdapter;
 
-class TestEmailAdapter extends TestCase
+class TestSwiftMailAdapter extends TestCase
 {
      public static $config = [
          'host' => 'smtp.mxhichina.com',
