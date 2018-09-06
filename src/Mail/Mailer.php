@@ -1,118 +1,245 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: Lotushy (liangtaohy@gmail.com)
- * Date: 2018/9/3
- * Time: 上午11:42
+ * User: shiwenyuan
+ * Date: 2018/9/6 13341007105@163.com
+ * Time: 下午1:04
  */
 
 namespace Xdp\Mail;
-use Xdp\Contract\Mail\Mailer as MailerContract;
 
-class Mailer implements MailerContract
+
+use Xdp\Mail\Exception\MailException;
+use Xdp\Utils\Traits\Singleton;
+use Xdp\Container\Exception\ContainerException;
+use XdpLog\MeLog;
+
+/**
+ * Class Mailer
+ * @package Xdp\Mail
+ */
+class Mailer
 {
+    use Singleton;
     /**
-     * 常用邮件模型
-     *
-     * @var array
+     * text格式邮件
      */
-    protected $templates;
-
+    const MAIL_TYPE_TEXT = 'text';
     /**
-     * to recipients array
-     *
-     * @var array
+     * html格式邮件
      */
-    protected $to;
-
+    const MAIL_TYPE_HTML = 'html';
     /**
-     * from user
-     *
-     * @var
+     * @var MailFactory
      */
-    protected $from;
+    protected $factory = null;
 
     /**
-     * cc recipients array
-     *
-     * @var array
+     * @var array|mixed|null
      */
-    protected $cc;
+    protected $config = null;
 
     /**
-     * bcc recipients array
-     *
-     * @var array
+     * @var \Xdp\Contract\Mail\MailConfigStrategy
      */
-    protected $bcc;
+    protected $strategy = null;
+
 
     /**
-     * message queue
-     *
-     * @var mixed
+     * Mailer constructor.
+     * @throws MailException
      */
-    protected $queue;
+    private function __construct()
+    {
+        if (!env('APP_MAIL_TPL_PATH')) {
+            throw new MailException('env APP_MAIL_TPL_PATH not exists');
+        }
+        @mkdir(env('APP_MAIL_TPL_PATH'), 0777, true);
 
-    protected $content;
+        if (!env('APP_MAIL_DRIVER')) {
+            throw new MailException('env APP_MAIL_DRIVER not exists');
+        }
+        if (!env('APP_MAIL_TPL_PATH')) {
+            throw new MailException('env APP_MAIL_TPL_PATH not exists');
+        }
+        if (!env('APP_MAIL_STRATEGY')) {
+            $strategy = 'Xdp\Mail\Strategy\PollMailConfigStrategy';
+        } else {
+            $strategy =  'Xdp\Mail\Strategy\\' . env('APP_MAIL_STRATEGY') . 'MailConfigStrategy';
+        }
+        $this->strategy =  new $strategy;
+
+        $factory = new MailFactory();
+        $this->factory = $factory;
+        $this->config = $this->strategy->getConfig();
+    }
+
 
     /**
-     * 设置mail::To
-     *
-     * @param $users
+     * 发送模版邮件
+     * @param $to
+     * @param string $tpl
+     * @param string $subject
+     * @param string $bcc
+     * @param string $cc
+     * @param null $attachment
+     * @param array $params
+     * @return bool
+     * @throws MailException
+     * @throws ContainerException
+     */
+    public static function sendTplMsg($to, string $tpl, string $subject, $bcc = '', $cc = '', $attachment = null, array $params = [])
+    {
+        $tpl = env('APP_MAIL_TPL_PATH') . DIRECTORY_SEPARATOR . $tpl.'.html';
+        if (!file_exists($tpl)) {
+            throw new MailException('tpl file not exists path ' . $tpl);
+        }
+        $data = file_get_contents($tpl);
+        $content = self::parseTpl($params, $data);
+        return self::getInstance()->send($to, $content, $subject, $bcc, $cc, $attachment, self::MAIL_TYPE_HTML);
+    }
+
+   
+
+    /**
+     * 解析模版
+     * @param $tpl_params
+     * @param $content
      * @return mixed
      */
-    public function to($users)
+    private static function parseTpl($tpl_params, $content)
     {
-        return $this;
+        foreach ($tpl_params as $key => $param) {
+            $content = str_replace("{" . $key . "}", $param, $content);
+        }
+
+        return $content;
     }
 
-    /**
-     * 设置mail::bcc
-     *
-     * @param $users
-     * @return mixed
-     */
-    public function bcc($users)
-    {
-        return $this;
-    }
-
-    /**
-     * 发送raw data
-     *
-     * @param $text
-     * @param null $callback
-     * @return mixed
-     */
-    public function raw($text, $callback = null)
-    {
-        return $this;
-    }
-
-    public function html($html, array $data = [], $callback = null)
-    {
-        return $this;
-    }
 
     /**
      * 发送html邮件
-     *
-     * @param $view html模板
-     * @param array $data 数据
-     * @param null $callback
-     * @return mixed
+     * @param $to
+     * @param $html
+     * @param string|null $subject
+     * @param $bcc
+     * @param $cc
+     * @param null $attachment
+     * @return bool
+     * @throws MailException
+     * @throws ContainerException
      */
-    public function send($view, array $data = [], $callback = null)
+    public static function sendHtml($to, $html, string $subject = null, $bcc, $cc, $attachment = null)
     {
+        return self::getInstance()->send($to, $html, $subject, $bcc, $cc, $attachment, self::MAIL_TYPE_HTML);
     }
 
     /**
-     * 获取发送失败的接收者recipients
-     *
-     * @return mixed
+     * 发送普通文本邮件
+     * @param $to
+     * @param $message
+     * @param $subject
+     * @param $bcc
+     * @param $cc
+     * @param $attachment
+     * @return bool
+     * @throws MailException
+     * @throws ContainerException
      */
-    public function failures()
+    public static function sendMsg($to, $message, $subject, $bcc, $cc, $attachment)
+    {
+        return self::getInstance()->send($to, $message, $subject, $bcc, $cc, $attachment, self::MAIL_TYPE_TEXT);
+    }
+
+
+    /**
+     * 发送多个html邮件
+     * @param $msgs
+     * @return bool
+     */
+    public static function row($msgs)
+    {
+        try{
+            foreach ($msgs as $msg) {
+                self::getInstance()->send(
+                    $msg['to'],
+                    $msg['body'] ?? null,
+                    $msg['subject'] ?? null,
+                    $msg['bcc']?? null,
+                    $msg['cc']??null,
+                    $msg['attachment']??null,
+                    self::MAIL_TYPE_HTML
+                );
+            }
+        }catch (MailException $mailException) {
+            MeLog::warning($mailException->getMessage());
+            return false;
+        }catch (ContainerException $containerException) {
+            MeLog::warning($containerException->getMessage());
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
+     * 发送邮件
+     * @param $to
+     * @param string|null $message
+     * @param string|null $subject
+     * @param $bcc
+     * @param $cc
+     * @param null $attachment
+     * @param string $type
+     * @return bool
+     * @throws MailException
+     * @throws \Xdp\Container\Exception\ContainerException
+     */
+    public function send($to, string $message =null, string $subject = null, $bcc, $cc, $attachment = null, string $type)
     {
 
+        foreach ($this->config as $from) {
+            $mailer = $this->factory->connection($from);
+
+            if (is_array($to)) {
+                $mailer->to($to['address'], $to['name']);
+            } else {
+                $mailer->to($to);
+            }
+            $mailer->subject($subject);
+
+            if ($type === self::MAIL_TYPE_HTML) {
+                $mailer->html($message);
+            } else {
+                $mailer->text($message);
+            }
+            if (!empty($bcc)) {
+                if (is_array($bcc)) {
+                    $mailer->bcc($bcc['address'], $bcc['name']);
+                } else {
+                    $mailer->bcc($bcc);
+                }
+            }
+            if (!empty($cc)) {
+                if (is_array($cc)) {
+                    $mailer->cc($cc['address'],$cc['name']);
+                } else {
+                    $mailer->cc($cc);
+                }
+            }
+
+            if (!empty($attachment)) {
+                if (is_array($attachment)) {
+                    $mailer->attachment($attachment['path'], $attachment['name']);
+                } else {
+                    $mailer->attachment($attachment);
+                }
+            }
+            if ($mailer->send()) {
+                return true;
+            }
+        }
+        return false;
     }
+
 }

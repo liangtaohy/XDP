@@ -9,8 +9,14 @@
 namespace Xdp\Mail\Exception;
 
 use Exception;
+use XdpLog\MeLog;
 
 class MailException extends Exception
 {
+    public function __construct($message = "")
+    {
+        MeLog::warning($message);
+        parent::__construct($message);
+    }
 
 }

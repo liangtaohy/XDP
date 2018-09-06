@@ -7,29 +7,21 @@
  */
 
 namespace Xdp\Test\Mail;
-use PHPUnit\Framework\TestCase;
 use Xdp\Mail\Adapter\PhpMailerAdapter;
+use Xdp\Test\XdpTestCase;
 
 require_once __DIR__ . "/../../vendor/autoload.php";
 
-class TestPhpMailerAdapter extends TestCase
+class TestPhpMailerAdapter extends XdpTestCase
 {
-    public static $config = [
-        'host' => 'smtp.mxhichina.com',
-        'port'     => 465,
-        'username' => 'admin@xmanlegal.com',
-        'password' => '',
-        'name' => '未来法律',
-        'charset'    => 'UTF-8',
-        'SMTPDebug'  => 0,// 启用SMTP调试功能 0关闭
-        'SMTPAuth'   => true,// 启用 SMTP 验证功能
-        'SMTPSecure' => 'ssl',// 安全协议
-    ];
-
     public function testMailAdapter()
     {
-        $swift = new PhpMailerAdapter(self::$config);
-        $swift->from(self::$config['username'],self::$config['name']);
+        $this->runApp();
+
+        $config = config('mail.accounts.admin');
+
+        $swift = new PhpMailerAdapter($config);
+        $swift->from($config['username'], $config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->text('test email');
         $swift->subject('test');
@@ -39,8 +31,12 @@ class TestPhpMailerAdapter extends TestCase
 
     public function testMailAttachment()
     {
-        $swift = new PhpMailerAdapter(self::$config);
-        $swift->from(self::$config['username'],self::$config['name']);
+        $this->runApp();
+
+        $config = config('mail.accounts.admin');
+
+        $swift = new PhpMailerAdapter($config);
+        $swift->from($config['username'], $config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->text('test email');
         $swift->subject('test');
@@ -50,8 +46,12 @@ class TestPhpMailerAdapter extends TestCase
 
     public function testMailSendHtml()
     {
-        $swift = new PhpMailerAdapter(self::$config);
-        $swift->from(self::$config['username'],self::$config['name']);
+        $this->runApp();
+
+        $config = config('mail.accounts.admin');
+
+        $swift = new PhpMailerAdapter($config);
+        $swift->from($config['username'], $config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->html('<h1>xdp</h1><p>test email</p>');
         $swift->subject('test');
@@ -60,9 +60,13 @@ class TestPhpMailerAdapter extends TestCase
 
     public function testStaticClass()
     {
-        $swift = PhpMailerAdapter::getInstance(self::$config);
+        $this->runApp();
 
-        $swift->from(self::$config['username'],self::$config['name']);
+        $config = config('mail.accounts.admin');
+
+        $swift = PhpMailerAdapter::getInstance($config);
+
+        $swift->from($config['username'],$config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->html('<h1>xdp</h1><p>test email</p>');
         $swift->subject('test');
@@ -71,13 +75,13 @@ class TestPhpMailerAdapter extends TestCase
 
     public function testToIsArray()
     {
-        $GLOBALS['LOG'] = [
-            'log_file' => __DIR__.'/logs/mail.log',
-            'log_level' => \XdpLog\MeLog::LOG_LEVEL_ALL
-        ];
-        $swift = PhpMailerAdapter::getInstance(self::$config);
+        $this->runApp();
 
-        $swift->from(self::$config['username'],self::$config['name']);
+        $config = config('mail.accounts.admin');
+
+        $swift = PhpMailerAdapter::getInstance($config);
+
+        $swift->from($config['username'],$config['name']);
         $swift->to(['1013816137@qq.com','13341007105@163.com'],'石文远');
         $swift->html('<h1>xdp</h1><p>test email</p>');
         $swift->subject('test');
@@ -86,20 +90,20 @@ class TestPhpMailerAdapter extends TestCase
 
     public function testBccIsArray()
     {
-        $GLOBALS['LOG'] = [
-            'log_file' => __DIR__.'/logs/mail.log',
-            'log_level' => \XdpLog\MeLog::LOG_LEVEL_ALL
-        ];
-        $swift = PhpMailerAdapter::getInstance(self::$config);
+        $this->runApp();
 
-        $swift->from(self::$config['username'],self::$config['name']);
+        $config = config('mail.accounts.admin');
+
+        $swift = PhpMailerAdapter::getInstance($config);
+
+        $swift->from($config['username'],$config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->bcc(['shiwenyuan@xmanlegal.com','13341007105@163.com'],'bcc');
         $swift->html('<h1>xdp</h1><p>test email</p>');
         $swift->subject('test');
         $swift->send();
 
-        $swift->from(self::$config['username'],self::$config['name']);
+        $swift->from($config['username'],$config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->bcc(['shiwenyuan@xmanlegal.com'=>'bcc','13341007105@163.com'=>'bcc163']);
         $swift->html('<h1>xdp</h1><p>test email</p>');
@@ -110,20 +114,20 @@ class TestPhpMailerAdapter extends TestCase
 
     public function testCcIsArray()
     {
-        $GLOBALS['LOG'] = [
-            'log_file' => __DIR__.'/logs/mail.log',
-            'log_level' => \XdpLog\MeLog::LOG_LEVEL_ALL
-        ];
-        $swift = PhpMailerAdapter::getInstance(self::$config);
+        $this->runApp();
 
-        $swift->from(self::$config['username'],self::$config['name']);
+        $config = config('mail.accounts.admin');
+
+        $swift = PhpMailerAdapter::getInstance($config);
+
+        $swift->from($config['username'],$config['name']);
         $swift->to(['1013816137@qq.com'],'石文远');
         $swift->cc(['shiwenyuan@xmanlegal.com','13341007105@163.com'],'cc');
         $swift->html('<h1>xdp</h1><p>test email</p>');
         $swift->subject('test');
         $swift->send();
 
-        $swift->from(self::$config['username'],self::$config['name']);
+        $swift->from($config['username'],$config['name']);
         $swift->to(['1013816137@qq.com'],'石文远');
         $swift->cc(['shiwenyuan@xmanlegal.com'=>'xmanlegal','13341007105@163.com'=>'email163']);
         $swift->html('<h1>xdp</h1><p>test email</p>');

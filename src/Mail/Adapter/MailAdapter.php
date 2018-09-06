@@ -20,7 +20,16 @@ trait MailAdapter
 
     use Singleton;
 
+    /**
+     * @var string
+     */
+    private static $logStr = ' send mail error: to [%s] from [%s] errormsg [%s]';
 
+
+    /**
+     * @var object
+     */
+    private $mailer = null;
     /**
      * mail配置
      * @var
@@ -94,9 +103,18 @@ trait MailAdapter
      */
     public function setConfig($config)
     {
-        $this->config = $config;
-        $this->from($config['username'], $config['name']);
+        static::__construct($config);
         return $this;
+    }
+
+    /**
+     * @param  $mailer
+     */
+    public function setMailer($mailer)
+    {
+        if (!$this->mailer) {
+            $this->mailer = $mailer;
+        }
     }
 
 
@@ -108,6 +126,7 @@ trait MailAdapter
      */
     public function to($addresses, $name = null)
     {
+
         if (is_array($addresses)) {
             if (!is_null($name)) {
                 foreach ($addresses as $key => $address) {
@@ -263,6 +282,5 @@ trait MailAdapter
         $this->cc = [];
         $this->bcc = [];
         $this->attachment = [];
-        $this->from = null;
     }
 }

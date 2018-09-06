@@ -9,7 +9,7 @@
 namespace Xdp\Mail\Adapter;
 
 
-use Xdp\Contract\Mail\Mailer;
+use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
 use Swift_SmtpTransport;
 use Swift_Mailer;
 use Swift_Message;
@@ -22,10 +22,22 @@ use XdpLog\MeLog;
  * Class SwiftMailAdapter
  * @package Xdp\Mail
  */
-class SwiftMailAdapter implements Mailer
+class SwiftMailAdapter implements BaseMailAdapter
 {
 
     use MailAdapter;
+
+    /**
+     * SwiftMailAdapter constructor.
+     * @param $config
+     */
+    public function __construct($config)
+    {
+        $this->config = $config;
+        $this->from($config['username'], $config['name']);
+        return $this;
+    }
+
 
     /**
      * 发送mail
@@ -35,16 +47,14 @@ class SwiftMailAdapter implements Mailer
     public function send($callback = null)
     {
         try {
-            //装填配置项
-            $transport = (new Swift_SmtpTransport($this->config['host'], $this->config['port']))
-                ->setUsername($this->config['username'])
-                ->setPassword($this->config['password']);
             //实例化mailer
-            $mailer = new Swift_Mailer($transport);
+            $mailer = new Swift_Mailer((new Swift_SmtpTransport($this->config['host'], $this->config['swiftMailPort']))
+                    ->setUsername($this->config['username'])
+                    ->setPassword($this->config['password']));
             //装填消息体
             $message = new Swift_Message($this->subject);
 
-            $message->setFrom($this->from['addresses'],$this->from['name']);
+            $message->setFrom($this->from['addresses'], $this->from['name']);
 
             $message->setTo($this->to);
 
@@ -57,7 +67,7 @@ class SwiftMailAdapter implements Mailer
             }
 
             if (!is_null($this->html)) {
-                $message->setBody($this->html,'text/html');
+                $message->setBody($this->html, 'text/html');
             }
             if (!is_null($this->text)) {
                 $message->setBody($this->text);
@@ -81,7 +91,6 @@ class SwiftMailAdapter implements Mailer
             $this->failures($exception);
             return false;
         }
-
         return false;
     }
 
@@ -91,6 +100,11 @@ class SwiftMailAdapter implements Mailer
      */
     public function failures(Exception $exception)
     {
-        MeLog::warning($exception->getMessage());
+        MeLog::warning(sprintf(self::$logStr,
+                json_encode($this->to, JSON_UNESCAPED_UNICODE),
+                json_encode($this->from, JSON_UNESCAPED_UNICODE),
+                $exception->getMessage()
+            )
+        );
     }
 }

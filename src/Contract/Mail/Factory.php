@@ -12,15 +12,24 @@ namespace Xdp\Contract\Mail;
  * Interface Factory
  * @package Xdp\Contract\Mail
  */
+use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
+
+/**
+ * Interface Factory
+ * @package Xdp\Contract\Mail
+ */
 interface Factory
 {
     /**
-     * 根据app的mail配置，选择mail
-     * @note env("MAIL_DRIVER") := PHPMailer  Swift_Mailer
-     *      默认配置为swift mailer
-     * @param  $driver
-     * @param null $user
+     * 通过配置名称获取 $driver
+     * @param $name
+     * @return MailAdapter
+     */
+    public function connection($name):BaseMailAdapter;
+
+    /**
+     * @param null $driver
      * @return mixed
      */
-    public function mailer($driver = 'SwiftMailer', $user = null);
+    public function setDriver($driver = null);
 }

@@ -6,13 +6,29 @@
  * Time: 上午9:57
  */
 
-return [
-    'driver' => 'PHPMailer',
-    'from' => [
-        'account'=>'admin@xmanlegal.com',
-        'password'=>'admin',
-        'host'=>'test.smtp.com',
-        'name'=>'xlegal admin'
+return  [
+    'drivers' =>[
+        'PhpMailer' => 'Xdp\Mail\Adapter\PhpMailerAdapter',
+        'SwiftMail' => 'Xdp\Mail\Adapter\SwiftMailAdapter',
     ],
-    'version'=>'v1.0',
+    'accounts' => [
+        'admin' => [
+            'host' => 'smtp.mxhichina.com',
+            'swiftMailPort' => 25,
+            'phpMailerPort' => 465,
+            'username' => 'admin@xmanlegal.com',
+            'password' => 'X2016Legal#www',
+            'name' => '未来法律',
+            'charset' => 'UTF-8',
+        ],
+        'admin01' => [
+            'host' => 'smtp.mxhichina.com',
+            'swiftMailPort' => 25,
+            'phpMailerPort' => 465,
+            'username' => 'admin01@xmanlegal.com',
+            'password' => 'X2018Legal#www',
+            'name' => '未来法律',
+            'charset' => 'UTF-8',
+        ],
+    ],
 ];

@@ -465,7 +465,7 @@ class Arr
 
     /**
      * Get one or a specified number of random values from an array.
-     *
+     * 从数组中获取一个或指定数量的随机值
      * @param  array  $array
      * @param  int|null  $number
      * @return mixed
@@ -505,9 +505,9 @@ class Arr
 
     /**
      * Set an array item to a given value using "dot" notation.
-     *
+     * 使用“点”表示法将数组项设置为给定值。
      * If no key is given to the method, the entire array will be replaced.
-     *
+     * 如果没有给该方法提供方法，则整个数组将被替换。
      * @param  array   $array
      * @param  string  $key
      * @param  mixed   $value
@@ -541,7 +541,7 @@ class Arr
 
     /**
      * Shuffle the given array and return the result.
-     *
+     * 对给定数组进行拖曳并返回结果。
      * @param  array  $array
      * @param  int|null  $seed
      * @return array
@@ -563,7 +563,7 @@ class Arr
 
     /**
      * Sort the array using the given callback or "dot" notation.
-     *
+     * 使用给定的回调或“点”符号对数组进行排序。
      * @param  array  $array
      * @param  callable|string|null  $callback
      * @return array
@@ -575,7 +575,7 @@ class Arr
 
     /**
      * Recursively sort an array by keys and values.
-     *
+     * 递归地通过键和值对数组进行排序。
      * @param  array  $array
      * @return array
      */
@@ -598,7 +598,7 @@ class Arr
 
     /**
      * Filter the array using the given callback.
-     *
+     * 使用给定回调筛选数组。
      * @param  array  $array
      * @param  callable  $callback
      * @return array
@@ -610,7 +610,7 @@ class Arr
 
     /**
      * If the given value is not an array and not null, wrap it in one.
-     *
+     * 如果给定值不是数组而不是null，则将其包装为一个数组
      * @param  mixed  $value
      * @return array
      */

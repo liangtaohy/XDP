@@ -10,23 +10,18 @@ namespace Xdp\Test\Mail;
 require_once __DIR__ . "/../../vendor/autoload.php";
 
 
-use PHPUnit\Framework\TestCase;
 use Xdp\Mail\Adapter\SwiftMailAdapter;
+use Xdp\Test\XdpTestCase;
 
-class TestSwiftMailAdapter extends TestCase
+class TestSwiftMailAdapter extends XdpTestCase
 {
-     public static $config = [
-         'host' => 'smtp.mxhichina.com',
-         'port'     => 25,
-         'username' => 'admin@xmanlegal.com',
-         'password' => '',
-         'name' => '未来法律',
-     ];
-
     public function testSwiftMailAdapter()
     {
-        $swift = new SwiftMailAdapter(self::$config);
-        $swift->from(self::$config['username'],self::$config['name']);
+        $this->runApp();
+        $config = config('mail.accounts.admin');
+
+        $swift = new SwiftMailAdapter($config);
+        $swift->from($config['username'],$config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->text('test email');
         $swift->subject('test');
@@ -35,8 +30,12 @@ class TestSwiftMailAdapter extends TestCase
 
     public function testSwiftMailAttachment()
     {
-        $swift = new SwiftMailAdapter(self::$config);
-        $swift->from(self::$config['username'],self::$config['name']);
+        $this->runApp();
+
+        $config = config('mail.accounts.admin');
+
+        $swift = new SwiftMailAdapter($config);
+        $swift->from($config['username'], $config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->text('test email');
         $swift->subject('test');
@@ -46,8 +45,12 @@ class TestSwiftMailAdapter extends TestCase
 
     public function testSwiftMailSendHtml()
     {
-        $swift = new SwiftMailAdapter(self::$config);
-        $swift->from(self::$config['username'],self::$config['name']);
+        $this->runApp();
+
+        $config = config('mail.accounts.admin');
+
+        $swift = new SwiftMailAdapter($config);
+        $swift->from($config['username'], $config['name']);
         $swift->to('1013816137@qq.com','石文远');
         $swift->html('<h1>test email</h1>');
         $swift->subject('test');

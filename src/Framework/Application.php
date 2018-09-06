@@ -92,6 +92,7 @@ class Application extends Container
 
     public function bootstrapWith(array $bootstrappers = [])
     {
+
         foreach ($bootstrappers as $bootstrap) {
             $this->make($bootstrap)->bootstrap($this);
         }

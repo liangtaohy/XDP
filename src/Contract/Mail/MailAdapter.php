@@ -9,12 +9,11 @@
 namespace Xdp\Contract\Mail;
 use Exception;
 /**
- * Interface Mailer
+ * Interface MailAdapter
  * @package Xdp\Contract\Mail
  */
-interface Mailer
+interface MailAdapter
 {
-
 
     /**
      * 接收方
@@ -26,16 +25,16 @@ interface Mailer
     /**
      * 添加暗抄送
      * @param $addresses
-     * @param $name
-     * @return Mailer
+     * @param null $name
+     * @return MailAdapter
      */
-    public function bcc($addresses, $name);
+    public function bcc($addresses, $name = null);
 
 
     /**
      * 设置email文本
      * @param $text
-     * @return Mailer
+     * @return MailAdapter
      */
     public function text(string $text);
 
@@ -44,14 +43,14 @@ interface Mailer
      * 设置发送方
      * @param string $mail
      * @param null $name
-     * @return Mailer
+     * @return MailAdapter
      */
     public function from(string $mail, $name = null);
 
     /**
      * 设置email文本
      * @param $html
-     * @return Mailer
+     * @return MailAdapter
      */
     public function html(string $html);
 
@@ -60,7 +59,7 @@ interface Mailer
      * 添加明抄送
      * @param $addresses
      * @param null $name
-     * @return Mailer
+     * @return MailAdapter
      */
     public function cc($addresses, $name = null);
 
@@ -69,7 +68,7 @@ interface Mailer
      *
      * @param $text
      * @param null $callback
-     * @return Mailer
+     * @return MailAdapter
      */
     public function raw($text, $callback = null);
 
@@ -77,7 +76,7 @@ interface Mailer
     /**
      * 设置主题
      * @param string $subject
-     * @return Mailer
+     * @return MailAdapter
      */
     public function subject(string $subject);
 
@@ -89,7 +88,7 @@ interface Mailer
      * @param string $encoding
      * @param string $type
      * @param string $disposition
-     * @return Mailer
+     * @return MailAdapter
      */
     public function attachment($path, $name = '', $encoding = 'base64', $type = '', $disposition = 'attachment');
     /**

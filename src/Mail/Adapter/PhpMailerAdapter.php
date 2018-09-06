@@ -10,7 +10,7 @@ namespace Xdp\Mail\Adapter;
 
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
-use Xdp\Contract\Mail\Mailer;
+use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
 use XdpLog\MeLog;
 
 
@@ -19,9 +19,24 @@ use XdpLog\MeLog;
  * Class PhpMailerAdapter
  * @package Xdp\Mail
  */
-class PhpMailerAdapter implements Mailer
+class PhpMailerAdapter implements BaseMailAdapter
 {
     use MailAdapter;
+
+    /**
+     * PhpMailerAdapter constructor.
+     * @param $config
+     */
+    public function __construct($config)
+    {
+        $this->config = $config;
+        $this->from($config['username'], $config['name']);
+        if (!$this->mailer) {
+            $this->setMailer(new PHPMailer());
+        }
+        return $this;
+    }
+
 
 
     /**
@@ -32,14 +47,14 @@ class PhpMailerAdapter implements Mailer
     public function send($callback = null)
     {
         try {
-            $mail = new PHPMailer();
+            $mail = $this->mailer;
             $mail->CharSet = $this->config['charset'];
             $mail->IsSMTP();
-            $mail->SMTPDebug = $this->config['SMTPDebug'];
-            $mail->SMTPAuth = $this->config['SMTPAuth'];
-            $mail->SMTPSecure = $this->config['SMTPSecure'];
+            $mail->SMTPDebug = 0;
+            $mail->SMTPAuth = true;
+            $mail->SMTPSecure = 'ssl';
             $mail->Host = $this->config['host'];
-            $mail->Port = $this->config['port'];
+            $mail->Port = $this->config['phpMailerPort'];
             $mail->Username = $this->config['username'];
             $mail->Password = $this->config['password'];
             $mail->Subject = $this->subject;
@@ -81,9 +96,7 @@ class PhpMailerAdapter implements Mailer
             return true;
         } catch (Exception $exception) {
             $this->failures($exception);
-            return false;
         }
-
         return false;
     }
 
@@ -94,7 +107,12 @@ class PhpMailerAdapter implements Mailer
      */
     public function failures(Exception $exception)
     {
-        MeLog::warning($exception->getMessage());
+        MeLog::warning(sprintf(self::$logStr,
+                json_encode($this->to, JSON_UNESCAPED_UNICODE),
+                json_encode($this->from, JSON_UNESCAPED_UNICODE),
+                $exception->getMessage()
+            )
+        );
     }
 }
 
