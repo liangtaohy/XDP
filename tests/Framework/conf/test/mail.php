@@ -14,8 +14,7 @@ return  [
     'accounts' => [
         'admin' => [
             'host' => 'smtp.mxhichina.com',
-            'swiftMailPort' => 25,
-            'phpMailerPort' => 465,
+            'port' => 465,
             'username' => 'admin@xmanlegal.com',
             'password' => 'X2016Legal#www',
             'name' => '未来法律',
@@ -23,8 +22,7 @@ return  [
         ],
         'admin01' => [
             'host' => 'smtp.mxhichina.com',
-            'swiftMailPort' => 25,
-            'phpMailerPort' => 465,
+            'port' => 465,
             'username' => 'admin01@xmanlegal.com',
             'password' => 'X2018Legal#www',
             'name' => '未来法律',

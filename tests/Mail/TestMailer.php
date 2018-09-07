@@ -57,14 +57,13 @@ class TestMailer extends XdpTestCase
         Mailer::row(
             [
                 [
-                'to' => ['address' => 'shiwenyuan@xmanlegal.com', 'name' => 'xman石文远'],
+                'to' => ['address' => ['shiwenyuan@xmanlegal.com','1013816317@qq.com']],
                 'body' => '<h1>shiwenyuan01</h1>',
                 'subject' => 'sendhtml',
                 'cc' => ['address' => '13341007105@163.com', 'name' => '163石文远'],
-                'bcc' => ['address' => '1013816137@qq.com', 'name' => 'qq石文远'],
                 'attachment' => ['path' => '/Users/shiwenyuan/Desktop/智能快递柜代理商合同.docx', 'name' => '石文远.docx']
                 ],
-                [
+               [
                     'to' => ['address' => 'shiwenyuan@xmanlegal.com', 'name' => 'xman石文远'],
                     'body' => '<h1>shiwenyuan02</h1>',
                     'subject' => 'sendhtml',

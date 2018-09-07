@@ -35,6 +35,9 @@ class SwiftMailAdapter implements BaseMailAdapter
     {
         $this->config = $config;
         $this->from($config['username'], $config['name']);
+        $this->mailer = new Swift_Mailer((new Swift_SmtpTransport($this->config['host'], $this->config['port'],env('APP_MAIL_SECURITY') ?? null))
+            ->setUsername($this->config['username'])
+            ->setPassword($this->config['password']));
         return $this;
     }
 
@@ -48,9 +51,7 @@ class SwiftMailAdapter implements BaseMailAdapter
     {
         try {
             //实例化mailer
-            $mailer = new Swift_Mailer((new Swift_SmtpTransport($this->config['host'], $this->config['swiftMailPort']))
-                    ->setUsername($this->config['username'])
-                    ->setPassword($this->config['password']));
+            $mailer = $this->mailer;
             //装填消息体
             $message = new Swift_Message($this->subject);
 

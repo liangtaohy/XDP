@@ -107,15 +107,6 @@ trait MailAdapter
         return $this;
     }
 
-    /**
-     * @param  $mailer
-     */
-    public function setMailer($mailer)
-    {
-        if (!$this->mailer) {
-            $this->mailer = $mailer;
-        }
-    }
 
 
     /**
@@ -126,15 +117,17 @@ trait MailAdapter
      */
     public function to($addresses, $name = null)
     {
-
         if (is_array($addresses)) {
             if (!is_null($name)) {
                 foreach ($addresses as $key => $address) {
                     $addresses[$address] = $name;
                     unset($addresses[$key]);
                 }
+            } else {
+                foreach ($addresses as $address) {
+                    $this->to[$address] = null;
+                }
             }
-            $this->to = $addresses;
         } else {
             $this->to[$addresses] = $name;
         }
@@ -155,8 +148,11 @@ trait MailAdapter
                     $addresses[$address] = $name;
                     unset($addresses[$key]);
                 }
+            } else {
+                foreach ($addresses as $address) {
+                    $this->to[$address] = null;
+                }
             }
-            $this->bcc = $addresses;
         } else {
             $this->bcc[$addresses] = $name;
         }
@@ -177,8 +173,11 @@ trait MailAdapter
                     $addresses[$address] = $name;
                     unset($addresses[$key]);
                 }
+            } else {
+                foreach ($addresses as $address) {
+                    $this->to[$address] = null;
+                }
             }
-            $this->cc = $addresses;
         } else {
             $this->cc[$addresses] = $name;
         }
