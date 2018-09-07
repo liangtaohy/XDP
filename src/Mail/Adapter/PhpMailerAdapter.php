@@ -10,16 +10,15 @@ namespace Xdp\Mail\Adapter;
 
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
-use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
+use Xdp\Contract\Mail\MailAdapter as MailAdapterContract;
 use XdpLog\MeLog;
-
 
 /**
  * PHPMailer适配器
  * Class PhpMailerAdapter
  * @package Xdp\Mail
  */
-class PhpMailerAdapter implements BaseMailAdapter
+class PhpMailerAdapter implements MailAdapterContract
 {
     use MailAdapter;
 
@@ -31,7 +30,7 @@ class PhpMailerAdapter implements BaseMailAdapter
     {
         $this->config = $config;
         $this->from($config['username'], $config['name']);
-        if (!$this->mailer) {
+        if (is_null($this->mailer)) {
             $this->mailer = new PHPMailer();
         }
         return $this;
@@ -50,7 +49,7 @@ class PhpMailerAdapter implements BaseMailAdapter
             $mail = $this->mailer;
             $mail->CharSet = $this->config['charset'];
             $mail->IsSMTP();
-            $mail->SMTPDebug = 0;
+            $mail->SMTPDebug = isset($this->config['debug']) ? intval($this->config['debug']) : 0;
             $mail->SMTPAuth = true;
             $mail->SMTPSecure = env('APP_MAIL_SECURITY') ?? null;
             $mail->Host = $this->config['host'];
@@ -107,12 +106,11 @@ class PhpMailerAdapter implements BaseMailAdapter
      */
     public function failures(Exception $exception)
     {
-        MeLog::warning(sprintf(self::$logStr,
-                json_encode($this->to, JSON_UNESCAPED_UNICODE),
-                json_encode($this->from, JSON_UNESCAPED_UNICODE),
-                $exception->getMessage()
-            )
-        );
+        MeLog::warning(sprintf(
+            self::$logStr,
+            json_encode($this->to, JSON_UNESCAPED_UNICODE),
+            json_encode($this->from, JSON_UNESCAPED_UNICODE),
+            $exception->getMessage()
+        ));
     }
 }
-

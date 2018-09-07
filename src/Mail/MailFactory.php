@@ -11,7 +11,7 @@ namespace Xdp\Mail;
 use Xdp\Contract\Mail\Factory;
 use Xdp\Contract\Mail\MailAdapter;
 use Xdp\Mail\Exception\MailException;
-use XdpLog\MeLog;
+use Xdp\Log\MeLog;
 use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
 
 
@@ -73,7 +73,7 @@ class MailFactory implements Factory
             $this->driver = $driver;
         }
 
-        return $this->driver;
+        return $this;
     }
     /**
      * 获取邮件发送实例
