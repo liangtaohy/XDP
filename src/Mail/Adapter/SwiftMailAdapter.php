@@ -15,7 +15,7 @@ use Swift_Mailer;
 use Swift_Message;
 use Exception;
 use Swift_Attachment;
-use XdpLog\MeLog;
+use Xdp\Log\MeLog;
 
 /**
  * SwiftMail适配器
@@ -35,6 +35,13 @@ class SwiftMailAdapter implements BaseMailAdapter
     {
         $this->config = $config;
         $this->from($config['username'], $config['name']);
+        //实例化mailer
+        if (is_null($this->mailer)) {
+            $this->mailer = new Swift_Mailer((new Swift_SmtpTransport($this->config['host'], $this->config['port']))
+                ->setUsername($this->config['username'])
+                ->setPassword($this->config['password']));
+        }
+
         return $this;
     }
 
@@ -47,10 +54,7 @@ class SwiftMailAdapter implements BaseMailAdapter
     public function send($callback = null)
     {
         try {
-            //实例化mailer
-            $mailer = new Swift_Mailer((new Swift_SmtpTransport($this->config['host'], $this->config['swiftMailPort']))
-                    ->setUsername($this->config['username'])
-                    ->setPassword($this->config['password']));
+
             //装填消息体
             $message = new Swift_Message($this->subject);
 

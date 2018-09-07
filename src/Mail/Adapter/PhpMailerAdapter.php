@@ -10,8 +10,8 @@ namespace Xdp\Mail\Adapter;
 
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
-use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
-use XdpLog\MeLog;
+use Xdp\Contract\Mail\MailAdapter as MailAdapterContract;
+use Xdp\Log\MeLog;
 
 
 /**
@@ -19,7 +19,7 @@ use XdpLog\MeLog;
  * Class PhpMailerAdapter
  * @package Xdp\Mail
  */
-class PhpMailerAdapter implements BaseMailAdapter
+class PhpMailerAdapter implements MailAdapterContract
 {
     use MailAdapter;
 
@@ -50,11 +50,11 @@ class PhpMailerAdapter implements BaseMailAdapter
             $mail = $this->mailer;
             $mail->CharSet = $this->config['charset'];
             $mail->IsSMTP();
-            $mail->SMTPDebug = 0;
+            $mail->SMTPDebug = isset($this->config['debug']) ? intval($this->config['debug']) : 0;
             $mail->SMTPAuth = true;
             $mail->SMTPSecure = 'ssl';
             $mail->Host = $this->config['host'];
-            $mail->Port = $this->config['phpMailerPort'];
+            $mail->Port = $this->config['port'];
             $mail->Username = $this->config['username'];
             $mail->Password = $this->config['password'];
             $mail->Subject = $this->subject;
