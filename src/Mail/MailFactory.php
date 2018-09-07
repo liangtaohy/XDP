@@ -11,9 +11,8 @@ namespace Xdp\Mail;
 use Xdp\Contract\Mail\Factory;
 use Xdp\Contract\Mail\MailAdapter;
 use Xdp\Mail\Exception\MailException;
-use Xdp\Log\MeLog;
+use XdpLog\MeLog;
 use Xdp\Contract\Mail\MailAdapter as BaseMailAdapter;
-
 
 /**
  * Class MailFactory
