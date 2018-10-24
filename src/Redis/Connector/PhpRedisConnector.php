@@ -11,6 +11,8 @@ namespace Xdp\Redis\Connector;
 
 use Xdp\Redis\Connection\PhpRedisConnection;
 
+use Redis;
+
 class PhpRedisConnector
 {
     /**
@@ -28,7 +30,7 @@ class PhpRedisConnector
     protected function redisClient($config)
     {
         // create client
-        $client = new \Redis();
+        $client = new Redis();
 
         // connect
         if ($client->{($config['persistent'] ?? false) ? 'pconnect' : 'connect'}(

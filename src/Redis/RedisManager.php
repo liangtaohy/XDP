@@ -7,12 +7,14 @@
  */
 namespace Xdp\Redis;
 
+use Pheanstalk\Connection;
 use Xdp\Contract\Redis\Factory;
 
 class RedisManager implements Factory
 {
     /**
-     * Redis Module
+     * Redis Connector
+     *
      * @var
      */
     private $driver;
@@ -36,7 +38,7 @@ class RedisManager implements Factory
      * 获取连接
      *
      * @param null $name
-     * @return mixed
+     * @return \Xdp\Redis\Connection\PhpRedisConnection
      */
     public function connection($name = null)
     {
@@ -46,7 +48,7 @@ class RedisManager implements Factory
             return $this->connections[$name];
         }
 
-        $this->connections[$name] = $this->resolve($name);
+        return $this->connections[$name] = $this->resolve($name);
     }
 
     /**
@@ -69,7 +71,7 @@ class RedisManager implements Factory
      */
     protected function connector()
     {
-        $class = 'Connector\\' . $this->driver . "Connector";
-        return new $class;
+        $class = __NAMESPACE__ . '\\Connector\\' . $this->driver . "Connector";
+        return new $class();
     }
 }
