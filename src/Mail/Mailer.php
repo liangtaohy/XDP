@@ -200,9 +200,8 @@ class Mailer
 
         foreach ($this->config as $from) {
             $mailer = $this->factory->connection($from);
-
             if (is_array($to)) {
-                $mailer->to($to['address'], $to['name']);
+                $mailer->to($to['address'], $to['name'] ?? null);
             } else {
                 $mailer->to($to);
             }
@@ -215,14 +214,14 @@ class Mailer
             }
             if (!empty($bcc)) {
                 if (is_array($bcc)) {
-                    $mailer->bcc($bcc['address'], $bcc['name']);
+                    $mailer->bcc($bcc['address'], $bcc['name']  ?? null);
                 } else {
                     $mailer->bcc($bcc);
                 }
             }
             if (!empty($cc)) {
                 if (is_array($cc)) {
-                    $mailer->cc($cc['address'],$cc['name']);
+                    $mailer->cc($cc['address'],$cc['name']  ?? null);
                 } else {
                     $mailer->cc($cc);
                 }
@@ -230,7 +229,7 @@ class Mailer
 
             if (!empty($attachment)) {
                 if (is_array($attachment)) {
-                    $mailer->attachment($attachment['path'], $attachment['name']);
+                    $mailer->attachment($attachment['path'], $attachment['name']  ?? null);
                 } else {
                     $mailer->attachment($attachment);
                 }
