@@ -33,7 +33,7 @@ abstract class Queue
         return $this->connection_name = $name;
     }
 
-    protected function createPayload($job, $data = null)
+    public function createPayload($job, $data = null)
     {
         if (is_object($job)) {
             return $this->createObjectPayload($job, $data);
@@ -57,7 +57,11 @@ abstract class Queue
 
         return [
             'jobName'   => $classname,
-            'handler'=>
+            'handler'   => $job,
+            'data'      => $data,
+            'create_at' => microTime(),
+            'attempts'  => null,
+            'max_tries' => null
         ];
     }
 

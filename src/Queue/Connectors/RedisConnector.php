@@ -8,17 +8,28 @@
 
 namespace Xdp\Queue\Connectors;
 
+use Xdp\Contract\Redis\Factory as XdpRedis;
+use Xdp\Queue\RedisQueue;
 
 class RedisConnector implements ConnectorInterface
 {
+    protected $redis;
+    protected $connection;
+
+    public function __construct(XdpRedis $redis, $connection)
+    {
+        $this->redis = $redis;
+        $this->connection = $connection;
+    }
+
     /**
-     * 链路层的Connector
+     * 连接到queue
      *
      * @param array $config
      * @return mixed
      */
     public function connect(array $config)
     {
-
+        return new RedisQueue($this->redis, $this->connection);
     }
 }
