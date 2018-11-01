@@ -33,9 +33,36 @@ abstract class Queue
         return $this->connection_name = $name;
     }
 
-    protected function createPayload($job, $data)
+    public function createPayload($job, $data = null)
     {
+        if (is_object($job)) {
+            return $this->createObjectPayload($job, $data);
+        } elseif (is_string($job)) {
+            return $this->createStringPayload($job, $data);
+        }
 
+        throw new \InvalidArgumentException("invalid job");
+    }
+
+    protected function createObjectPayload(Job $job, $data = null)
+    {
+        $payload = $job->jsonSerialize();
+        $payload['data'] = $data;
+        return $payload;
+    }
+
+    protected function createStringPayload(string $job, $data = null)
+    {
+        $classname = explode("@", $job)[0];
+
+        return [
+            'jobName'   => $classname,
+            'handler'   => $job,
+            'data'      => $data,
+            'create_at' => microTime(),
+            'attempts'  => null,
+            'max_tries' => null
+        ];
     }
 
     public function setContainer($container)

@@ -440,6 +440,19 @@ class PhpRedisConnection
     }
 
     /**
+     * Adds the string value to the tail (right) of the list. Creates the list if the key didn't exist.
+     * If the key exists and is not a list, FALSE is returned.
+     *
+     * @param $key
+     * @param $value
+     * @return int|bool false - if failure 否则，返回队列长度
+     */
+    public function rPush($key, $value)
+    {
+        return $this->client->rPush($key, $value);
+    }
+
+    /**
      * 从srckey尾端弹出一个元素x，并把x放入dstkey的头端。然后，返回x
      * @param $srckey
      * @param $dstkey

@@ -7,7 +7,9 @@
  */
 namespace Xdp\Queue;
 
-abstract class Job
+use Xdp\Contract\Support\Jsonable;
+
+class Job implements \JsonSerializable
 {
     /**
      * IoC container
@@ -17,128 +19,128 @@ abstract class Job
     public $container;
 
     /**
+     * Job唯一标识
+     *
+     * @var
+     */
+    public $jobId;
+
+    /**
+     * Job名称
+     *
+     * @var int
+     */
+    public $jobName;
+
+    /**
+     * 创建时间
+     *
+     * @var int
+     */
+    public $create_at;
+
+    /**
+     * 延迟时间，秒
+     * @var int
+     */
+    public $delay;
+
+    /**
+     * 延迟到，时间戳（秒）
+     *
+     * @var int
+     */
+    public $delay_at;
+
+    /**
+     * 是否已删除
+     *
+     * @var bool
+     */
+    public $deleted;
+
+    /**
+     * 删除时间戳, 时间戳（毫秒）
+     *
+     * @var int
+     */
+    public $deleted_at;
+
+    /**
+     * 过期时间戳
+     *
+     * @var int
+     */
+    public $expire;
+
+    /**
      * 当前重试次数
      *
      * @var int
      */
-    public $attempts = 0;
+    public $attempts;
 
     /**
      * 最大重试次数
      *
      * @var int
      */
-    public $max_tries = 0;
+    public $max_tries;
 
     /**
-     * 任务类型
-     *
-     * @note 保留字段
-     * @var
+     * @var string
      */
-    public $type = 0;
+    public $rawdata;
 
     /**
-     * 连接名称
+     * Job处理器
      *
      * @var string
      */
-    public $connection_name = '';
+    public $handler;
 
-    /**
-     * 队列名称
-     *
-     * @var string
-     */
-    public $queue = '';
-
-    /**
-     * 延迟毫秒数
-     *
-     * @var int
-     */
-    public $delay = 0;
-
-    /**
-     * 延迟到什么时间开始执行
-     *
-     * @note $this->delay_at = now() + $delay
-     * @var int
-     */
-    public $delay_at = 0;
-
-    /**
-     * 是否删除
-     *
-     * @var int
-     */
-    public $deleted;
-
-    /**
-     * 是否已放到保留队列
-     *
-     * @var int
-     */
-    public $reserved;
-
-    private $rawdata;
-
-    /**
-     * 获取job标识
-     *
-     * @return mixed 由vendor生成
-     */
-    abstract public function getJobId();
-
-    /**
-     * 获取job所需数据，由子类定义
-     *
-     * @return mixed
-     */
-    abstract public function getRawbody();
-
-    public function fire()
-    {
-    }
-
-    /**
-     * @return mixed
-     */
-    public function payload()
-    {
-        if (is_null($this->rawdata)) {
-            $this->rawdata = json_decode($this->getRawbody(), true);
-        }
-
-        return $this->rawdata;
-    }
-
-    /**
-     * @return $this
-     */
     public function delete()
     {
         $this->deleted = true;
-        return $this;
+        $this->deleted_at = microTime();
     }
 
-    public function isDelete()
+    public function getJobId()
     {
-        return $this->deleted;
+        return $this->jobId;
     }
 
-    public function expireAt()
+    public function getJobName()
     {
-        return $this->payload()['expire_at'] ?? null;
+        return $this->jobName;
     }
 
-    public function queue()
+    /**
+     * @param string $handler
+     */
+    public function setHandler(string $handler)
     {
-        return $this->queue;
+        $this->handler = $handler;
     }
 
-    public function connectionname()
+    /**
+     * Json序列化
+     *
+     * @return array
+     */
+    public function jsonSerialize()
     {
-        return $this->connection_name;
+        return [
+            'jobId'         => $this->getJobId(),
+            'jobName'       => $this->getJobName(),
+            'create_at'     => $this->create_at,
+            'deleted'       => $this->deleted ?? null,
+            'deleted_at'    => $this->deleted_at ?? null,
+            'delay'         => $this->delay ?? null,
+            'attempts'      => $this->attempts ?? null,
+            'max_tries'     => $this->max_tries ?? null,
+            'expire'        => $this->expire ?? 0,
+            'handler'       => $this->handler
+        ];
     }
 }
