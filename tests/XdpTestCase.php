@@ -13,15 +13,19 @@ use PHPUnit\Framework\TestCase;
 use Xdp\Framework\Application;
 use Xdp\Contract\Debug\ExceptionHandler;
 use Xdp\Framework\Foundation\Exception\ConcreteExceptionHandler;
+use Xdp\Sms\Adapter\AliDaYuAdapter;
+use Xdp\Sms\Adapter\QCloudAdapter;
 
 
 class XdpTestCase extends TestCase
 {
-    static $bootstrappers = [
+    public static $bootstrappers = [
         \Xdp\Framework\Foundation\Bootstrap\LoadEnvironmentVars::class,
         \Xdp\Framework\Foundation\Bootstrap\LoadConfiguration::class,
         \Xdp\Framework\Foundation\Bootstrap\HandleException::class,
     ];
+
+
 
     public static function runApp()
     {
@@ -29,6 +33,7 @@ class XdpTestCase extends TestCase
         $app = new Application("test", __DIR__."/Framework");
         $app->instance(ExceptionHandler::class, new ConcreteExceptionHandler);
         $app->bootstrapWith(self::$bootstrappers);
+
 
         $GLOBALS['LOG'] = [
             'log_file' => env("APP_LOG_FILE"),

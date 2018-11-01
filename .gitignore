@@ -1,3 +1,5 @@
 vendor/
 /.idea/
 /tests/Framework/config
+/tests/Mail/logs
+/tests/Sms/logs/

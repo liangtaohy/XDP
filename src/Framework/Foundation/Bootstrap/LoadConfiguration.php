@@ -48,7 +48,6 @@ class LoadConfiguration
             while ($file = $d->read()) {
                 $realfile = $conf_dir . DIRECTORY_SEPARATOR . $file;
                 if (is_file($realfile) && ($file != ".") && ($file != "..")) {
-                    echo PHP_EOL . "----: " . $realfile . PHP_EOL;
                     $files[basename($file, '.php')] = $realfile;
                 }
             }
