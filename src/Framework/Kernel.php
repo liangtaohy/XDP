@@ -31,11 +31,6 @@ class Kernel implements KernelContract
     public function handle($request)
     {
         try {
-            /**
-             * NOT Safe
-             */
-            //$request->enableHttpMethodParameterOverride();
-
             $response = $this->sendRequestThroughRouter($request);
         } catch (Exception $e) {
             $this->reportException($e);

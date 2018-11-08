@@ -7,7 +7,6 @@
  */
 namespace Xdp\Redis;
 
-use Pheanstalk\Connection;
 use Xdp\Contract\Redis\Factory;
 
 class RedisManager implements Factory
@@ -28,10 +27,24 @@ class RedisManager implements Factory
 
     private $connections = [];
 
-    public function __construct($driver, array $config = null)
+    private $app;
+
+    public function __construct($app, $driver, array $config = null)
     {
+        $this->app = $app;
         $this->driver = $driver;
         $this->config = $config;
+    }
+
+    public function setContainer($container)
+    {
+        $this->app = $container;
+        return $this;
+    }
+
+    public function getContainer()
+    {
+        return $this->app;
     }
 
     /**

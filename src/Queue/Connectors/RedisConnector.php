@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Redis Connector
  * User: Lotushy (liangtaohy@gmail.com)
  * Date: 2018/10/20
  * Time: 下午5:05
@@ -16,7 +16,7 @@ class RedisConnector implements ConnectorInterface
     protected $redis;
     protected $connection;
 
-    public function __construct(XdpRedis $redis, $connection)
+    public function __construct(XdpRedis $redis, $connection = null)
     {
         $this->redis = $redis;
         $this->connection = $connection;
@@ -30,6 +30,10 @@ class RedisConnector implements ConnectorInterface
      */
     public function connect(array $config)
     {
-        return new RedisQueue($this->redis, $this->connection);
+        return new RedisQueue($this->redis,
+            $config['connection'] ?? $this->connection,
+            $config['timeout'],
+            $config['retryAfter'],
+            $config['default']);
     }
 }

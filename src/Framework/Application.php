@@ -76,7 +76,12 @@ class Application extends Container
     /**
      * Application constructor.
      *
-     * @param null $app_name
+     * @param string $app_name
+     * @param string|null $base_path
+     */
+    /**
+     * Application constructor.
+     * @param string|null $app_name
      * @param string|null $base_path
      */
     public function __construct(string $app_name = null, string $base_path = null)

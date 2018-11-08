@@ -369,23 +369,22 @@ class PhpRedisConnection
      *
      * @param $key
      * @param $member
-     * @return int 1 - 成功，0 - 失败
+     * @return int
      */
-    public function zRem($key, $member)
+    public function zDelete($key, $member)
     {
         return $this->client->zRem($key, $member);
     }
 
     /**
-     * 删除值为member的元素
-     *
      * @param $key
      * @param $member
+     * @param mixed ...$members
      * @return int
      */
-    public function zDelete($key, $member)
+    public function zRem($key, $member, ...$members)
     {
-        return $this->client->zDelete($key, $member);
+        return $this->client->zRem($key, $member, ...$members);
     }
 
     /**
@@ -480,6 +479,27 @@ class PhpRedisConnection
     public function lSize($key)
     {
         return $this->client->lSize($key);
+    }
+
+    /**
+     * 执行lua脚本
+     *
+     * @param $script
+     * @param $numKeys
+     * @param mixed ...$params
+     * @return mixed
+     * @throws \Exception
+     */
+    public function eval($script, $numKeys, ...$params)
+    {
+        try {
+            return $this->client->eval($script, $params, $numKeys);
+        } catch (RedisException $e) {
+            $p = json_encode($params);
+            $this->errmsg = "redis_error: redis is down or overload cmd[eval] parameters[{$p}] " .
+                " errno[{$e->getCode()}] errmsg[{$e->getMessage()}]";
+            throw new \Exception($this->errmsg);
+        }
     }
 
     /**

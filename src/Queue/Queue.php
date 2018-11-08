@@ -7,6 +7,8 @@
  */
 namespace Xdp\Queue;
 
+use Xdp\Utils\Str;
+
 abstract class Queue
 {
     /**
@@ -23,6 +25,17 @@ abstract class Queue
      */
     protected $container;
 
+    public function setContainer($container)
+    {
+        $this->container = $container;
+        return $this;
+    }
+
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
     public function getConnectionName()
     {
         return $this->connection_name;
@@ -30,43 +43,44 @@ abstract class Queue
 
     public function setConnectionName($name)
     {
-        return $this->connection_name = $name;
+        $this->connection_name = $name;
+        return $this;
     }
 
-    public function createPayload($job, $data = null)
+    public function createPayload($event, $data = null)
     {
-        if (is_object($job)) {
-            return $this->createObjectPayload($job, $data);
-        } elseif (is_string($job)) {
-            return $this->createStringPayload($job, $data);
+        if (is_object($event)) {
+            return $this->createObjectPayload($event, $data);
+        } elseif (is_string($event)) {
+            return $this->createStringPayload($event, $data);
         }
 
         throw new \InvalidArgumentException("invalid job");
     }
 
-    protected function createObjectPayload(Job $job, $data = null)
+    protected function createObjectPayload(Event $event, $data = null)
     {
-        $payload = $job->jsonSerialize();
-        $payload['data'] = $data;
-        return $payload;
+        $payload = $event->toArray();
+
+        if (!is_null($data)) {
+            $payload['data'] = $data;
+        }
+
+        return json_encode($payload);
     }
 
-    protected function createStringPayload(string $job, $data = null)
+    protected function createStringPayload(string $event, $data = null)
     {
-        $classname = explode("@", $job)[0];
+        $classname = explode("@", $event)[0];
 
-        return [
-            'jobName'   => $classname,
-            'handler'   => $job,
+        return json_encode([
+            'id'    => Str::random(24),
+            'name'   => $classname,
+            'handler'   => $event,
             'data'      => $data,
             'create_at' => microTime(),
             'attempts'  => null,
             'max_tries' => null
-        ];
-    }
-
-    public function setContainer($container)
-    {
-        $this->container = $container;
+        ]);
     }
 }

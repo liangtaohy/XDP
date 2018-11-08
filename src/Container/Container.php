@@ -130,6 +130,8 @@ class Container extends ContainerArrayAccess implements ContainerInterface
     {
         if (is_object($key)) {
             $this->storage->instance(get_class($key), $key);
+        } else if ($object instanceof \Closure) {
+            $this->storage->factory($key, $object);
         } else {
             $this->storage->instance($key, $object);
         }

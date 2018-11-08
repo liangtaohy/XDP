@@ -11,6 +11,8 @@ namespace Xdp\Test\Redis;
 require_once __DIR__ . "/../../vendor/autoload.php";
 
 use PHPUnit\Framework\TestCase;
+use Xdp\Container\Container;
+use Xdp\Queue\LuaScript;
 use Xdp\Redis\RedisManager;
 
 class TestRedis extends TestCase
@@ -21,13 +23,19 @@ class TestRedis extends TestCase
 
         $config = [
             'xdp.bj.test' =>[
-                'host'=> '10.172.217.126',
+                'host'=> '127.0.0.1',
                 'port'=> 6379,
+                'password' => "foobared"
             ]
         ];
 
-        $redis = (new RedisManager($driver, $config))->connection('xdp.bj.test');
+        $redis = (new RedisManager(new Container(), $driver, $config))->connection('xdp.bj.test');
 
+        $ev = $redis->eval(LuaScript::migrateExpiredJobs(), 2, 'lotushy:delayed', 'lotushy', time());
+
+        var_dump($ev);
+        $this->assertEquals('test', $ev);
+        /*
         $test_key = 'liangtaotest:h';
 
         $redis->hSet($test_key, 'field4', 'value4');
@@ -84,6 +92,11 @@ class TestRedis extends TestCase
         $redis->lPush($list_key, 'C');
         $redis->lPush($list_key, 'A');
         $redis->lPush($list_key, 'A');
+
+        $len = $redis->eval("return redis.call('llen', KEYS[1])", 1, $list_key);
+        //var_dump($len);
+        $this->assertEquals(5, $len);
+
         $this->assertEquals(array('A', 'A', 'C', 'B', 'A'), $redis->lRange($list_key, 0, -1));
 
         $redis->lRem($list_key, 'A', 2);
@@ -94,16 +107,13 @@ class TestRedis extends TestCase
 
         $this->assertEquals(1, $redis->lSize($list_key_2));
 
-        $r = $redis->blPop([$list_key, $list_key_2], 10);
+        $redis->blPop([$list_key, $list_key_2], 10);
 
-        var_dump($r);
-        $r = $redis->blPop([$list_key, $list_key_2], 10);
-        var_dump($r);
+        $redis->blPop([$list_key, $list_key_2], 10);
 
-        $r = $redis->blPop([$list_key_2], 10);
-        var_dump($r);
+        $redis->blPop([$list_key_2], 10);
 
-        $r = $redis->blPop([$list_key_2], 10);
-        var_dump($r);
+        $redis->blPop([$list_key_2], 10);*/
+
     }
 }

@@ -32,28 +32,34 @@ class PhpRedisConnector
         // create client
         $client = new Redis();
 
-        // connect
-        if ($client->{($config['persistent'] ?? false) ? 'pconnect' : 'connect'}(
-                $config['host'], $config['port'], $config['timeout'] ?? 0
-            ) === false) {
-            throw new \RedisException("can't connect to redis, %s:%d", $config['host'], $config['port']);
+        try {
+            // connect
+            if ($client->{($config['persistent'] ?? false) ? 'pconnect' : 'connect'}(
+                    $config['host'], $config['port'], $config['timeout'] ?? 0
+                ) === false) {
+                throw new \InvalidArgumentException(sprintf("can't connect to redis, %s:%d", $config['host'], $config['port']));
+            }
+
+            // try auth if needed
+            if (!empty($config['password']) && $client->auth($config['password']) === false) {
+                throw new \InvalidArgumentException(sprint("auth failed, %s:%d", $config['host'], $config['port']));
+            }
+
+            // select to indexed db if specified
+            if (!empty($config['db'])) {
+                $client->select($config['db']);
+            }
+
+            // slow query
+            if (!empty($config['read_timeout'])) {
+                $client->setOption(\Redis::OPT_READ_TIMEOUT, $config['read_timeout']);
+            }
+
+            return $client;
+        } catch (\RedisException $e) {
+            throw $e;
         }
 
-        // try auth if needed
-        if (!empty($config['password']) && $client->auth($config['password']) === false) {
-            throw new \RedisException("auth failed, %s:%d", $config['host'], $config['port']);
-        }
-
-        // select to indexed db if specified
-        if (!empty($config['db'])) {
-            $client->select($config['db']);
-        }
-
-        // slow query
-        if (!empty($config['read_timeout'])) {
-            $client->setOption(\Redis::OPT_READ_TIMEOUT, $config['read_timeout']);
-        }
-
-        return $client;
+        return null;
     }
 }

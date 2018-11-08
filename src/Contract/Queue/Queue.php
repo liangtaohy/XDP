@@ -1,19 +1,22 @@
 <?php
 /**
- * Created by PhpStorm.
+ * 队列接口定义
+ *
  * User: Lotushy (liangtaohy@gmail.com)
  * Date: 2018/10/19
  * Time: 下午6:09
  */
-namespace Xdp\Contract\Queue\Queue;
+namespace Xdp\Contract\Queue;
 
 interface Queue
 {
-    public function push($queue, $job, $data = null);
+    public function push($event, $queue = null);
 
-    public function later($queue, $job, $data = null, $delay = 0);
+    public function later($event, $delay = 0, $queue = null);
 
-    public function size($queue);
+    public function pop($queue = null);
+
+    public function size($queue = null);
 
     public function getConnectionName();
 

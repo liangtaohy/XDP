@@ -17,7 +17,6 @@ class LoadConfiguration
     {
         $items = [];
 
-        //$app->singleton('config', $config = new Configuration($items));
         $app->instance('config', $config = new Configuration($items));
 
         $this->loadConfigurationFiles($app, $config);
@@ -38,7 +37,6 @@ class LoadConfiguration
 
     protected function getFiles($conf_dir)
     {
-        echo PHP_EOL . $conf_dir . PHP_EOL;
         $conf_dir = rtrim($conf_dir, '\/');
 
         $files = [];
@@ -48,7 +46,6 @@ class LoadConfiguration
             while ($file = $d->read()) {
                 $realfile = $conf_dir . DIRECTORY_SEPARATOR . $file;
                 if (is_file($realfile) && ($file != ".") && ($file != "..")) {
-                    echo PHP_EOL . "----: " . $realfile . PHP_EOL;
                     $files[basename($file, '.php')] = $realfile;
                 }
             }

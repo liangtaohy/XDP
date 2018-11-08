@@ -191,7 +191,6 @@ class Route
         if (! $this->controller) {
             $controller = $this->parseControllerCallback()[0];
             $this->controller = $this->container->resolve($controller);
-            var_dump($this->controller);
         }
 
         return $this->controller;
