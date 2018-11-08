@@ -1,14 +1,14 @@
 <?php
+
+namespace Xdp\Test\Sms;
+
 /**
  * Created by PhpStorm.
  * User: shiwenyuan
  * Date: 2018/10/31 13341007105@163.com
  * Time: 12:37 PM
  */
-
-namespace Xdp\Test\Sms;
 use Xdp\Sms\Exception\SmsException;
-
 
 /**
  * Class SmsTplConfig

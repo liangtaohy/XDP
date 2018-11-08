@@ -10,46 +10,47 @@ namespace Xdp\Test\Sms;
 
 require_once __DIR__.'/../../vendor/autoload.php';
 
+use Xdp\Sms\Adapter\QCloudAdapter;
 use Xdp\Test\XdpTestCase;
-use Qcloud\Sms\SmsSingleSender;
-use Qcloud\Sms\SmsMultiSender;
 
 class TestQCloud extends XdpTestCase
 {
-    public function testSend()
+    public $mobile = 13341007105;
+
+    public $v_code = 1234;
+
+    public function testError()
     {
-        $appid = 'xxxx'; // 1400开头
+        $this->runApp();
 
-        $appkey = "xxxx";
-
-        $phoneNumbers = ["13341007105", "12345678902", "12345678903"];
-
-        try {
-            $ssender = new SmsSingleSender($appid, $appkey);
-            $result = $ssender->send(0, "86", $phoneNumbers[0], "验证码:1234。请妥善保管，打死不能告诉别人！", "", "");
-            $rsp = json_decode($result);
-            echo $result;
-        } catch(\Exception $e) {
-            echo var_dump($e);
-        }
+        $params = [
+            'message' => 'this is msg',
+            'file_id' => 'this is file_id',
+            'log_id' => 'this is log_id'
+        ];
+        $ret = QCloudAdapter::getInstance()->sendTplSms($this->mobile, 'error_msg_id', $params);
+        unset($params['log_id']);
+        $ret = QCloudAdapter::getInstance()->sendTplSms($this->mobile, SmsTplConfig::FILE_PRICE_FAIL, $params);
     }
 
-    public function testSends()
+
+    public function testSendVCode()
     {
-        $appid = 'xxx'; // 1400开头
-
-        $appkey = "xxx";
-
-        $phoneNumbers = ["17600777233"];
-        try {
-            $msender = new SmsMultiSender($appid, $appkey);
-            $result = $msender->send(0, "86", $phoneNumbers,
-                "验证码:1234。请妥善保管，打死不能告诉别人！", "", "");
-            $rsp = json_decode($result);
-            echo $result;
-        } catch(\Exception $e) {
-            echo var_dump($e);
-        }
+        $this->runApp();
+        $ret = QCloudAdapter::getInstance()->sendVCode($this->mobile, $this->v_code);
+        $this->assertEquals($ret, true);
     }
 
+    public function testSendTplSms()
+    {
+        $this->runApp();
+
+        $params = [
+            'message' => 'this is msg',
+            'file_id' => 'this is file_id',
+            'log_id' => 'this is log_id'
+        ];
+        $ret = QCloudAdapter::getInstance()->sendTplSms($this->mobile, SmsTplConfig::FILE_PRICE_FAIL, $params);
+        $this->assertEquals($ret, true);
+    }
 }

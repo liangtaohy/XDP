@@ -19,7 +19,6 @@ use Xdp\Utils\Traits\Singleton;
  */
 class SmsManager implements Sms
 {
-    use Singleton;
 
     /**
      * @var \Xdp\Contract\Sms\SmsAdapter
@@ -118,9 +117,7 @@ class SmsManager implements Sms
     public static function sendVoice($mobile, $code)
     {
         self::getSmsClient('submail');
-
         self::$smsClient->useMiddleWare($mobile);
-
         return self::$smsClient->sendVoice($mobile, $code);
     }
 }

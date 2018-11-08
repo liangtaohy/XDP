@@ -19,8 +19,8 @@ class TestSubMail extends XdpTestCase
     {
         $this->runApp();
 
-        $mail = SubMailAdapter::getInstance()->sendVoice('13341007105', 1234);
-        var_dump($mail);
-        die;
+        $ret = SubMailAdapter::getInstance()->sendVoice('13341007105', 1234);
+
+        $this->assertEquals($ret, true);
     }
 }

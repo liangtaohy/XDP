@@ -8,26 +8,29 @@
 
 
 return [
+    //|--------------------------------------默认服务方-------------------------------------------|
     'default_driver' => 'aliyun',
+    //|--------------------------------------服务方配置列表----------------------------------------|
     'accounts' => [
         'aliyun' => [
             'app_key' => '23406112',
-            'app_secret' => 'ba085914e727ee9c88f25cb2a5bd0cfa',
+            'app_secret' => 'xxxx',
             'sandbox' => true,
             'sign_name' => '未来法律',
             'vcode_tpl_code' => 'SMS_76550018',
         ],
         'qcloud' => [
             'app_key' => 1400093387,
-            'app_secret' => 'cf6d82816622e48efaf2909a43134ff9',
+            'app_secret' => 'xxxx',
             'sign_name' => '未来法律',
             'vcode_tpl_code' => 122447,
         ]
     ],
+    //|------------------------------------------语音短信服务方------------------------------------|
     'voice_option' => [
         'appid' => '20751',
-        'appkey' =>'cd84276f4509991459c8d7176761afba',
+        'appkey' =>'xxxx',
         'sign_type'=>'normal',
         'server'=>'https://api.mysubmail.com/',
-]
+    ]
 ];

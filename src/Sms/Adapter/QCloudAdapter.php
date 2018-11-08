@@ -46,8 +46,11 @@ class QCloudAdapter implements SmsAdapter
      * QCloudAdapter constructor.
      * @param $config
      */
-    private function __construct($config)
+    private function __construct($config = [])
     {
+        if (empty($config)) {
+            $config = config('sms.accounts.qcloud');
+        }
         $this->config = $config;
         $this->setMiddleWares(self::$smsMiddleware);
         return $this;

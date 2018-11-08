@@ -1,4 +1,7 @@
 <?php
+
+namespace Xdp\Sms\Adapter;
+
 /**
  * Created by PhpStorm.
  * User: shiwenyuan
@@ -6,13 +9,11 @@
  * Time: 12:29 PM
  */
 
-namespace Xdp\Sms\Adapter;
-
-
 use Xdp\Contract\Sms\SmsAdapter;
 use Xdp\Utils\Traits\Middleware;
 use Xdp\Utils\Traits\Singleton;
 use voiceverify;
+use XdpLog\MeLog;
 
 /**
  * Class SubMailAdapter
@@ -39,7 +40,7 @@ class SubMailAdapter implements SmsAdapter
      * SubMailAdapter constructor.
      * @param array $config
      */
-    function __construct($config = [])
+    private function __construct($config = [])
     {
         if (empty($config)) {
             $config = config('sms.voice_option');
@@ -70,7 +71,11 @@ class SubMailAdapter implements SmsAdapter
         $submail=new voiceverify($this->config);
         $submail->SetTo($mobile);
         $submail->SetCode($code);
-        return $submail->verify();
+        $ret = $submail->verify();
+        if ($ret['status'] == 'error') {
+            return $this->failures($ret['msg']);
+        }
+        return true;
     }
 
     /**
@@ -87,10 +92,15 @@ class SubMailAdapter implements SmsAdapter
     /**
      * @param $error_msg
      * @param null $error_code
-     * @return mixed|void
+     * @return bool
      */
     public function failures($error_msg, $error_code = null)
     {
-        // TODO: Implement failures() method.
+        $error = [
+            'code' => $error_code,
+            'message' => $error_msg
+        ];
+        MeLog::warning(json_encode($error, JSON_UNESCAPED_UNICODE));
+        return false;
     }
 }

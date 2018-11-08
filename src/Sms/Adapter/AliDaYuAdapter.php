@@ -1,4 +1,7 @@
 <?php
+
+namespace Xdp\Sms\Adapter;
+
 /**
  * Created by PhpStorm.
  * User: shiwenyuan
@@ -6,10 +9,6 @@
  * Time: 10:18 AM
  */
 
-namespace Xdp\Sms\Adapter;
-
-
-use Xdp\Contract\Sms\Sms;
 use Xdp\Contract\Sms\SmsAdapter;
 use Xdp\Sms\Exception\SmsException;
 use Xdp\Utils\Traits\Middleware;
@@ -73,12 +72,11 @@ class AliDaYuAdapter implements SmsAdapter
             $req = new AlibabaAliqinFcSmsNumSendRequest;
             $req->setSmsType("normal");
             $req->setSmsFreeSignName($this->config['sign_name']);
-            $req->setSmsParam(json_encode(['vcode'=>intval($code)]));
-            $req->setRecNum($mobile);
+            $req->setSmsParam(json_encode(["vcode"=>strval($code)]));
+            $req->setRecNum(strval($mobile));
             $req->setSmsTemplateCode($this->config['vcode_tpl_code']);
             $ret = $client->execute($req);
-            MeLog::debug(json_encode($ret));
-            if ($ret->msg != 'OK') {
+            if ($ret->result->msg != 'OK') {
                 return $this->failures(json_encode($ret));
             }
             return true;
@@ -98,18 +96,16 @@ class AliDaYuAdapter implements SmsAdapter
     public function sendTplSms($mobile, $msg_id, $data)
     {
         $msg_id = SmsTplConfig::isValidMsgId($msg_id, 'aliyun');
-
         try {
             $client = new TopClient($this->config['app_key'], $this->config['app_secret']);
             $req = new AlibabaAliqinFcSmsNumSendRequest;
             $req->setSmsType("normal");
             $req->setSmsFreeSignName($this->config['sign_name']);
             $req->setSmsParam(json_encode($data));
-            $req->setRecNum($mobile);
+            $req->setRecNum(strval($mobile));
             $req->setSmsTemplateCode($msg_id);
             $ret = $client->execute($req);
-            MeLog::debug(json_encode($ret));
-            if ($ret->msg != 'OK') {
+            if ($ret->result->msg != 'OK') {
                 return $this->failures(json_encode($ret));
             }
             return true;

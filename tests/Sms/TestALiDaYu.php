@@ -10,37 +10,47 @@ namespace Xdp\Test\Sms;
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 
+use Xdp\Sms\Adapter\AliDaYuAdapter;
+use Xdp\Sms\Exception\SmsException;
 use Xdp\Test\XdpTestCase;
-use Flc\Alidayu\Client;
-use Flc\Alidayu\App;
-use Flc\Alidayu\Requests\AlibabaAliqinFcSmsNumSend;
-use Flc\Alidayu\Requests\IRequest;
+
 class TestALiDaYu extends XdpTestCase
 {
-    /**
-     * @throws \Exception
-     */
-    public function testSend()
+    public $mobile = "13341007105";
+
+    public $v_code = 1234;
+
+    public function testError()
     {
+        $this->runApp();
 
-        $config = [
-            'app_key' => '23379413',
-            'app_secret' => '5623394aec68f68397699c5def7a5578',
-            'sandbox'    => true,  // 是否为沙箱环境，默认false
+        $params = [
+            'message' => 'this is msg',
+            'file_id' => 'this is file_id',
+            'log_id' => 'this is log_id'
         ];
+        $ret = AliDaYuAdapter::getInstance()->sendTplSms($this->mobile, 'error_msg_id', $params);
+        unset($params['log_id']);
+        $ret = AliDaYuAdapter::getInstance()->sendTplSms($this->mobile, SmsTplConfig::FILE_PRICE_FAIL, $params);
+    }
 
+    public function testSendVCode()
+    {
+        $this->runApp();
+        $ret = AliDaYuAdapter::getInstance()->sendVCode($this->mobile, $this->v_code);
+        $this->assertEquals($ret, true);
+    }
 
-        $client = new Client(new App($config));
-        $req    = new AlibabaAliqinFcSmsNumSend;
+    public function testSendTplSms()
+    {
+        $this->runApp();
 
-        $req->setRecNum('13341007105')
-            ->setSmsParam([
-//                "business_name" => "asdasda",
-            ])
-            ->setSmsFreeSignName("未来法律")
-            ->setSmsTemplateCode("SMS_135026825");
-
-        $resp = $client->execute($req);
-        var_dump($resp);
+        $params = [
+            'message' => 'this is msg',
+            'file_id' => 'this is file_id',
+            'log_id' => 'this is log_id'
+        ];
+        $ret = AliDaYuAdapter::getInstance()->sendTplSms($this->mobile, SmsTplConfig::FILE_PRICE_FAIL, $params);
+        $this->assertEquals($ret, true);
     }
 }
