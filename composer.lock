@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b568be25148b67aa496ad88d439863bb",
+    "content-hash": "5e8de73d07e064bcb3fe81f1d476b485",
     "packages": [
         {
             "name": "doctrine/lexer",
@@ -255,6 +255,84 @@
             "time": "2016-10-10T12:19:37+00:00"
         },
         {
+            "name": "qcloudsms/qcloudsms_php",
+            "version": "v0.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/qcloudsms/qcloudsms_php.git",
+                "reference": "48822045772d343b93c3d505d8a187cd51153c5a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/qcloudsms/qcloudsms_php/zipball/48822045772d343b93c3d505d8a187cd51153c5a",
+                "reference": "48822045772d343b93c3d505d8a187cd51153c5a",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://dl.laravel-china.org/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require-dev": {
+                "sami/sami": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Qcloud\\Sms\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "qcloud sms php sdk",
+            "keywords": [
+                "php",
+                "qcloud",
+                "sdk",
+                "sms"
+            ],
+            "time": "2018-09-19T07:19:17+00:00"
+        },
+        {
+            "name": "shiwenyuan/alidayu",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/shiwenyuan/alidayu.git",
+                "reference": "8aec4e421bbd543c30070983bd92374fa8682230"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/shiwenyuan/alidayu/zipball/8aec4e421bbd543c30070983bd92374fa8682230",
+                "reference": "8aec4e421bbd543c30070983bd92374fa8682230",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://dl.laravel-china.org/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "北行10000",
+                    "email": "13341007105@163.com"
+                }
+            ],
+            "description": "利用阿里大鱼发送短信验证码的扩展.",
+            "time": "2018-10-30T05:55:36+00:00"
+        },
+        {
             "name": "shiwenyuan/xdp-log",
             "version": "v1.0.1",
             "source": {
@@ -292,6 +370,57 @@
                 }
             ],
             "time": "2018-08-31T07:03:14+00:00"
+        },
+        {
+            "name": "submail/submail-php",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dev-submail/SUBMAIL_PHP_SDK.git",
+                "reference": "dc347233ae1828364841f90d6beeb4c604ff3d02"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dev-submail/SUBMAIL_PHP_SDK/zipball/dc347233ae1828364841f90d6beeb4c604ff3d02",
+                "reference": "dc347233ae1828364841f90d6beeb4c604ff3d02",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://dl.laravel-china.org/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "type": "project",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.3-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "SUBMAILAutoload.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "submail",
+                    "email": "service@submail.cn"
+                }
+            ],
+            "description": "submail sdk.",
+            "homepage": "http://submail.cn",
+            "keywords": [
+                "submail"
+            ],
+            "time": "2018-07-27T09:56:43+00:00"
         },
         {
             "name": "swiftmailer/swiftmailer",
@@ -3994,7 +4123,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "submail/submail-php": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
