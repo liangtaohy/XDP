@@ -1199,13 +1199,13 @@ if (! function_exists('config')) {
     }
 }
 
-if (! function_exists('microTime')) {
+if (! function_exists('getMicroTime')) {
     /**
      * Get micro time
      *
      * @return int
      */
-    function microTime()
+    function getMicroTime()
     {
         $temp = explode(" ", microtime());
         return intval(bcadd($temp[0], $temp[1], 6) * 1000);

@@ -14,6 +14,6 @@ return [
         'persistent'    => true,
         'password'  => 'foobared',
         'db'    => null,
-        'read_timeout'  => 10,
+        'read_timeout'  => 100,
     ],
 ];

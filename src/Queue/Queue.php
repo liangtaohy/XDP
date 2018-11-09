@@ -25,6 +25,13 @@ abstract class Queue
      */
     protected $container;
 
+    /**
+     * 重试规则
+     *
+     * @var
+     */
+    public $retryAfter;
+
     public function setContainer($container)
     {
         $this->container = $container;
@@ -78,7 +85,7 @@ abstract class Queue
             'name'   => $classname,
             'handler'   => $event,
             'data'      => $data,
-            'create_at' => microTime(),
+            'create_at' => getMicroTime(),
             'attempts'  => null,
             'max_tries' => null
         ]);

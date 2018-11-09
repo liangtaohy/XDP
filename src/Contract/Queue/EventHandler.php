@@ -10,14 +10,21 @@
 namespace Xdp\Contract\Queue;
 
 
+/**
+ * Interface EventHandler
+ *
+ * handle是事件处理器的默认处理方法，若使用自定义方法，请遵循参数约定。
+ *
+ * @package Xdp\Contract\Queue
+ */
 interface EventHandler
 {
     /**
-     * fire
+     * default event handle method
      *
-     * @param mixed $app
+     * @param \Xdp\Queue\Event $event
      * @param string $payload
      * @return mixed
      */
-    public function fire($app, $payload);
+    public function handle($event, $payload);
 }

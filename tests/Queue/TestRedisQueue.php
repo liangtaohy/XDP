@@ -43,6 +43,8 @@ class TestRedisQueue extends TestCase
 
     public function testRedisQueue()
     {
+        $t = getMicroTime();
+        echo PHP_EOL . 'microtime: ' . $t . PHP_EOL;
         $app = new Container();
         $app->instance("config", $config = new Config());
 
@@ -75,8 +77,8 @@ class TestRedisQueue extends TestCase
 
         $e = new Event($app);
         $e->setName('get')
-            ->setDelay(100)
-            ->setRetryAfter(60)
+            ->setDelay(8)
+            ->setRetryAfter(10)
             ->setMaxRetries(10)
             ->setData('hello, ' . Str::random(5))
             ->setHandler("Xdp\Test\Queue\EventHandlerHub@dump");
@@ -85,11 +87,18 @@ class TestRedisQueue extends TestCase
 
         $this->assertTrue($r > 0);
 
-        sleep(210);
+        sleep(1);
 
-        $ev = $conn->pop();
+        try {
+            $ev = $conn->pop();
+        } catch (\RedisException $e) {
+            echo PHP_EOL . $e->getCode() . ':' . $e->getMessage() . PHP_EOL;
+        }
 
+        $conn->pop();
         $this->assertEquals($e->getName(), json_decode($ev[0], true)['name']);
+
+        $conn->delete($ev[1]); // 处理完后，清除事件
     }
 }
 
@@ -116,11 +125,18 @@ class EventWorkerStub
     }
 }
 
-class EventHandlerHub
+class EventHandlerHub implements EventHandler
 {
-    public function dump($payload)
+    public function dump($event, $payload)
     {
+        echo PHP_EOL . $event->getId() . PHP_EOL;
         echo PHP_EOL . "handle event with data >>> payload: " . $payload . PHP_EOL;
+        return $payload;
+    }
+
+    public function handle($event, $payload)
+    {
+        echo PHP_EOL . "The Default Handle Method >>> payload: " . $payload . PHP_EOL;
         return $payload;
     }
 }

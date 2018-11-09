@@ -9,7 +9,7 @@
 return [
     'driver'    => 'Redis',
     'connection'    => "bj.redis.01",
-    'timeout'   => 10, // 10 seconds
+    'timeout'   => 11, // 10 seconds
     'retryAfter'    => 60, // 60 seconds
     'default'   => 'lotushy', // default queue name
 ];

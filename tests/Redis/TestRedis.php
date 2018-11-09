@@ -31,11 +31,6 @@ class TestRedis extends TestCase
 
         $redis = (new RedisManager(new Container(), $driver, $config))->connection('xdp.bj.test');
 
-        $ev = $redis->eval(LuaScript::migrateExpiredJobs(), 2, 'lotushy:delayed', 'lotushy', time());
-
-        var_dump($ev);
-        $this->assertEquals('test', $ev);
-        /*
         $test_key = 'liangtaotest:h';
 
         $redis->hSet($test_key, 'field4', 'value4');
@@ -113,7 +108,11 @@ class TestRedis extends TestCase
 
         $redis->blPop([$list_key_2], 10);
 
-        $redis->blPop([$list_key_2], 10);*/
+        $redis->blPop([$list_key_2], 10);
 
+        $redis->flushAll();
+
+        $r = $redis->blPop(['test'], 1);
+        var_dump($r);
     }
 }

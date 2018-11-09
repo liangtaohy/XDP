@@ -44,15 +44,26 @@ class Event
     }
 
     /**
+     * 返回IoC容器
+     *
+     * @return \Xdp\Contract\Container\ContainerInterface
+     */
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
+    /**
      * 触发事件，调用hander处理该事件
      *
      * @return mixed
      */
     public function fire()
     {
-        list($class, $method) = explode("@", $this->handler);
+        list($class, $method) = array_pad(explode("@", $this->handler), 2 , 'handle');
+
         $this->instance = $this->container->make($class);
-        return $this->instance->{$method}($this->data);
+        return $this->instance->{$method}($this, $this->data);
     }
 
     public function getId()
@@ -156,19 +167,22 @@ class Event
     }
 
     /**
-     * 设置延迟的秒数（ttl）
-     * @param int $delay
+     * 设置延迟的秒数
+     *
+     * delay_at被设置为毫秒
+     *
+     * @param int $delay 秒
      * @return $this
      */
     public function setDelay(int $delay)
     {
         $this->delay = $delay;
-        $this->delay_at = time() + $delay;
+        $this->delay_at = getMicroTime() + $delay * 1000;
         return $this;
     }
 
     /**
-     * 返回延迟的时间
+     * 返回延迟的时间 （毫秒）
      * @return mixed
      */
     public function getDelayAt()
@@ -183,7 +197,7 @@ class Event
      */
     public function getDelayTtl()
     {
-        return $this->delay_at - time();
+        return intval(($this->delay_at - getMicroTime())/1000);
     }
 
     /**

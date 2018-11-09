@@ -46,13 +46,6 @@ class RedisQueue extends Queue implements QueueInterface
     public $timeout;
 
     /**
-     * 多久重试
-     *
-     * @var int
-     */
-    public $retryAfter;
-
-    /**
      * RedisQueue constructor.
      * @param $redis
      * @param string $connection_name
@@ -209,8 +202,8 @@ class RedisQueue extends Queue implements QueueInterface
             $payload = json_decode($item[1], true);
             $payload['attempts']++;
             $reserved = json_encode($payload);
-            if (is_null($this->retryAfter)) {
-                $this->connection()->zAdd($queue . self::APPENDIX_RESERVED, microTime() + $this->retryAfter, $reserved);
+            if (!is_null($this->retryAfter)) {
+                $this->connection()->zAdd($queue . self::APPENDIX_RESERVED, getMicroTime() + $this->retryAfter * 1000, $reserved);
             }
         } catch (JsonException $e) {
             echo $e->getMessage() . PHP_EOL;
@@ -256,7 +249,7 @@ class RedisQueue extends Queue implements QueueInterface
     protected function migrateExpiredJobs(string $from, string $to)
     {
         return $this->connection()->eval(
-            LuaScript::migrateExpiredJobs(), 2, $from, $to, time()
+            LuaScript::migrateExpiredJobs(), 2, $from, $to, getMicroTime()
         );
     }
 
