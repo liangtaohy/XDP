@@ -87,7 +87,7 @@ class TestRedisQueue extends TestCase
 
         $this->assertTrue($r > 0);
 
-        sleep(1);
+        sleep(11);
 
         try {
             $ev = $conn->pop();

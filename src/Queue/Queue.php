@@ -7,6 +7,7 @@
  */
 namespace Xdp\Queue;
 
+use Symfony\Component\Debug\Exception\UndefinedMethodException;
 use Xdp\Utils\Str;
 
 abstract class Queue
@@ -74,6 +75,16 @@ abstract class Queue
         }
 
         return json_encode($payload);
+    }
+
+    /**
+     * @param $rawdata
+     * @param $queue
+     * @throws UndefinedMethodException
+     */
+    public function delete($rawdata, $queue)
+    {
+        throw new \BadMethodCallException();
     }
 
     protected function createStringPayload(string $event, $data = null)

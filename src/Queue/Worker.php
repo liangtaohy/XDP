@@ -7,6 +7,8 @@
  */
 namespace Xdp\Queue;
 
+use Exception;
+
 class Worker
 {
     /**
@@ -104,14 +106,35 @@ class Worker
     private $maxTimeOut = 0;
 
     /**
+     * QueueManager
+     *
+     * @var \Xdp\Queue\QueueManager
+     */
+    private $manager;
+
+    /**
      * 队列名称
      *
      * @var
      */
     private $queue;
 
-    public function __construct($db, $queue)
+    /**
+     * IoC container
+     * @var \Xdp\Contract\Container\ContainerInterface
+     */
+    protected $app;
+
+    /**
+     * Worker constructor.
+     * @param $app - IoC container
+     * @param $manager - QueueManager
+     * @param $queue - worker要监听的队列
+     */
+    public function __construct($app, $manager, $queue)
     {
+        $this->app = $app;
+        $this->manager = $manager;
         $this->queue = $queue;
     }
 
@@ -125,6 +148,24 @@ class Worker
         $this->avgTime = 0;
         $this->maxTime = 0;
         $this->minTime = 0;
+    }
+
+    public function increJobs()
+    {
+        $this->jobs++;
+        return $this;
+    }
+
+    public function increSuccessJobs()
+    {
+        $this->successJobs++;
+        return $this;
+    }
+
+    public function increFailedJobs()
+    {
+        $this->failedJobs++;
+        return $this;
     }
 
     public function register()
@@ -151,7 +192,7 @@ class Worker
 
     }
 
-    public function sinalHanlder()
+    public function signalHandler()
     {
 
     }
@@ -164,16 +205,36 @@ class Worker
 
     public function run()
     {
+        $q = explode(",", $this->queue);
 
-    }
+        while(1) {
+            foreach ($q as $queue) {
+                try {
+                    $payload = $this->manager->connection()->pop($queue);
+                    if (is_null($payload)) {
+                        continue;
+                    }
 
-    public function runNextJob()
-    {
+                    if (is_array($payload) && count($payload) !== 2) {
+                        continue;
+                    }
 
-    }
+                    $this->increJobs();
 
-    public function process($job)
-    {
+                    $event = Event::load($this->app, $payload[0]);
 
+                    $status = $event->fire();
+
+                    if ($status === 0) {
+                        $this->increSuccessJobs();
+                        $this->manager->connection()->delete($payload[1], $queue);
+                    } else {
+                        $this->increFailedJobs();
+                    }
+                } catch (Exception $e) {
+                    echo $e->getMessage() . ":" . $e->getCode() . PHP_EOL;
+                }
+            }
+        }
     }
 }
